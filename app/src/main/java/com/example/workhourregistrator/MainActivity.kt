@@ -16,6 +16,12 @@ import java.io.FileInputStream
 import android.content.Intent
 import android.net.Uri
 import android.support.v4.content.FileProvider
+import android.support.v7.app.AlertDialog
+import android.view.View
+import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_main.*
 import org.apache.poi.hssf.usermodel.*
 import org.apache.poi.hssf.util.CellRangeAddress
@@ -82,6 +88,26 @@ class MainActivity : AppCompatActivity() {
 
 
         }
+
+        start_work.setOnClickListener {
+            if (action_buttons.visibility == View.INVISIBLE) {
+                action_buttons.visibility = View.VISIBLE
+            }
+            else {
+                action_buttons.visibility == View.INVISIBLE
+            }
+
+        }
+        change_work.setOnClickListener {
+
+        }
+        start_lunch.setOnClickListener {
+
+        }
+        quit_work.setOnClickListener {
+            createDateCells(wb, sheet, "keskiviikko", "22.1.2020")
+            saveExcelFile(this,"test.xls")
+        }
     }
 
     private fun saveExcelFile(context: Context, fileName: String): Boolean {
@@ -105,12 +131,12 @@ class MainActivity : AppCompatActivity() {
         try {
             os = FileOutputStream(file)
             wb.write(os)
-            Log.w("FileUtils", "Writing file$file")
+            Log.d("FileUtils", "Writing file$file")
             success = true
         } catch (e: IOException) {
-            Log.w("FileUtils", "Error writing $file", e)
+            Log.d("FileUtils", "Error writing $file", e)
         } catch (e: Exception) {
-            Log.w("FileUtils", "Failed to save file", e)
+            Log.d("FileUtils", "Failed to save file", e)
         } finally {
             try {
                 os?.close()
@@ -285,5 +311,21 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(emailIntent, "Send email..."))
     }
 
+
+    private val viewGroup: ViewGroup? = null
+
+    private fun openDialog(id: Int) {
+        val builder = AlertDialog.Builder(this, R.style.DialogTheme)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_layout, viewGroup)
+        val dialogText: TextView = dialogView.findViewById(R.id.dialog_text)
+        val dialogEditText: EditText = dialogView.findViewById(R.id.dialog_edit_text)
+        dialogText.text = this.getText(id)
+        builder.setView(dialogView)
+            .setPositiveButton(R.string.ok) { _, _ ->
+
+            }
+            .setNegativeButton(R.string.cancel) { _, _ ->
+            }.show()
+    }
 
 }
