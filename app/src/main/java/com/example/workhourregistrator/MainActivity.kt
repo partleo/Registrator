@@ -3,9 +3,7 @@ package com.example.workhourregistrator
 import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
-import org.apache.poi.hssf.record.aggregates.RowRecordsAggregate.createRow
 import org.apache.poi.hssf.util.HSSFColor
 import java.io.File
 import java.io.FileOutputStream
@@ -14,14 +12,17 @@ import android.widget.Toast
 import org.apache.poi.poifs.filesystem.POIFSFileSystem
 import java.io.FileInputStream
 import android.content.Intent
-import android.net.Uri
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
+import android.text.Editable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_MONTH
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_WORK_NUMBER
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_ROW
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.START_TIME_WORK
 import kotlinx.android.synthetic.main.activity_main.*
 import org.apache.poi.hssf.usermodel.*
 import org.apache.poi.hssf.util.CellRangeAddress
@@ -36,41 +37,77 @@ class MainActivity : AppCompatActivity() {
         private const val MAIN_FOLDER = "WorkHourRegistrator"
         private const val EXCEL_FOLDER = "excel_files"
         val s = File.separator!!
-        val folder = Environment.getExternalStorageDirectory().toString() + s + MAIN_FOLDER + s + EXCEL_FOLDER
-        val path = Environment.getExternalStorageDirectory().toString() + s + MAIN_FOLDER + s + EXCEL_FOLDER + s
+        //val folder = Environment.getExternalStorageDirectory().toString() + s + MAIN_FOLDER + s + EXCEL_FOLDER
+        //val path = Environment.getExternalStorageDirectory().toString() + s + MAIN_FOLDER + s + EXCEL_FOLDER + s
     }
 
-    private var listOfRows = arrayListOf<Row>()
+    private val dp = DateProvider()
+    private var spe = SharedPreferencesEditor()
+
+    //private var listOfRows = arrayListOf<Row>()
     private var wb = HSSFWorkbook()
     private lateinit var sheet: Sheet
+
+    private lateinit var row: Row
+
+    private var finalWorkNumber = ""
+    private var finalDescription = ""
+
+    private val viewGroup: ViewGroup? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        spe.setupSharedPreferencesEditor(this)
 
+        //spe.setStatus(LAST_ROW, 0) //remove this later!!
 
-        wb = HSSFWorkbook()
+        initializeExcelFile()
+
+        //wb = HSSFWorkbook()
 
         //New Sheet
-        sheet = wb.createSheet("Work hours")
-        val row = sheet.createRow(0)
-        listOfRows.add(row)
+        //sheet = wb.createSheet("Work hours")
+
+        //val row = sheet.createRow(0)
+        //listOfRows.add(row)
+        //spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
 
 
+        //createTaskRow(wb, sheet, row)
 
-        createTaskRow(wb, sheet, row)
-
+        /*
         fillRow(wb, sheet, 1, "TEST", "tehtävän kuvaus", "8.00", "9.15", "1:15")
         fillRow(wb, sheet, 2, "TEST2", "tässä esimerkkinä vähän pidempi tehtävän kuvaus", "9.15", "10.45", "1:30")
         fillRow(wb, sheet, 3, "TEST3", "lounastauko", "10.45", "11.15", "0:30")
         fillRow(wb, sheet, 4, "TEST", "tehtävän kuvaus", "11.15", "16.00", "4:45")
         fillRow(wb, sheet, 5, "TUNNIT YHT.", "päivän työtunnit mukaanlukien lounastauko", "8.00", "16.00", "8:00")
+        */
 
-        saveExcelFile(this,"test.xls")
+        //saveExcelFile(this,"test.xls")
 
         send_email.setOnClickListener {
-            createDateCells(wb, sheet, "keskiviikko", "22.1.2020")
-            saveExcelFile(this,"test.xls")
+
+            /*
+            val row3 = sheet.createRow(13)
+
+            fillRow(wb, sheet, 13, "TEST", "tehtävän kuvaus", "8.00", "9.15", "1:15")
+            fillRow(wb, sheet, 14, "TEST2", "tässä esimerkkinä vähän pidempi tehtävän kuvaus", "9.15", "10.45", "1:30")
+            fillRow(wb, sheet, 15, "TEST3", "lounastauko", "10.45", "11.15", "0:30")
+            fillRow(wb, sheet, 16, "TEST", "tehtävän kuvaus", "11.15", "16.00", "4:45")
+            fillRow(wb, sheet, 17, "TUNNIT YHT.", "päivän työtunnit mukaanlukien lounastauko", "8.00", "16.00", "8:00")
+
+
+            createDateCells(wb, sheet, row3,"perjantai", "24.1.2020")
+            saveExcelFile(this, "test.xls")
+            */
+
+
+
+            //createDateCells(wb, sheet, row,"keskiviikko", "22.1.2020")
+            //saveExcelFile(this, "test.xls")
+            //readExcelFile(this, "test.xls")
+
             //sendEmail(this, "test.xls")
             /*
             try {
@@ -90,23 +127,82 @@ class MainActivity : AppCompatActivity() {
         }
 
         start_work.setOnClickListener {
-            if (action_buttons.visibility == View.INVISIBLE) {
-                action_buttons.visibility = View.VISIBLE
+            row = sheet.createRow(spe.getStatus(LAST_ROW, 0))
+
+            val workNumber =
+                if (select_saved_number_checkbox.isChecked) {
+                    if (spinner.selectedItem == null) {
+                        ""
+                    } else {
+                        spinner.selectedItem.toString()
+                    }
+                } else {
+                    work_number_input.text.toString()
+                }
+            if (workNumber != "") {
+                workInProgress(true)
+                spe.setStatus(START_TIME_WORK, dp.getCurrentTime())
+                spe.setStatus(CURRENT_WORK_NUMBER, workNumber)
             }
             else {
-                action_buttons.visibility == View.INVISIBLE
+                Toast.makeText(this, "field empty"//getString(R.string.field_empty)
+                    , Toast.LENGTH_SHORT).show()
             }
+
+
 
         }
         change_work.setOnClickListener {
-
+            openDialog(edit_text_description.text, false)
         }
         start_lunch.setOnClickListener {
-
+            openDialog(edit_text_description.text, true)
         }
         quit_work.setOnClickListener {
-            createDateCells(wb, sheet, "keskiviikko", "22.1.2020")
+            openDialog(edit_text_description.text, null)
+        }
+    }
+
+    private fun workInProgress(inProgress: Boolean) {
+        if (inProgress) {
+            start_work.isEnabled = false
+            action_buttons.visibility = View.VISIBLE
+            work_number_select.visibility = View.GONE
+        }
+        else {
+            start_work.isEnabled = true
+            action_buttons.visibility = View.GONE
+            work_number_select.visibility = View.VISIBLE
+        }
+    }
+
+    private fun initializeExcelFile() {
+        if (dp.getCurrentMonth() != spe.getStatus(CURRENT_MONTH, "")) {
+            wb = HSSFWorkbook()
+            sheet = wb.createSheet(dp.getCurrentMonth())
+
+            spe.setStatus(LAST_ROW, 0)
+
+            val row = sheet.createRow(0)
+            //listOfRows.add(row)
+            spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
+            createTaskRow(wb, sheet, row)
+
+
+            val fileName = dp.getCurrentMonthAndYear()
+            saveExcelFile(this,"$fileName.xls")
+
+        } else {
+            /*
+            val row = sheet.createRow(spe.getStatus(LAST_ROW, 0))
+            //listOfRows.add(row)
+            spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
+
+
+            createTaskRow(wb, sheet, row)
+
             saveExcelFile(this,"test.xls")
+            */
         }
     }
 
@@ -147,15 +243,17 @@ class MainActivity : AppCompatActivity() {
         return success
     }
 
-    private fun createDateCells(wb: Workbook, sheet: Sheet, weekDay: String, date: String) {
+    private fun createDateCells(wb: Workbook, sheet: Sheet, row: Row, weekDay: String, date: String) {
         sheet.setColumnWidth(0, 15 * 50)
         sheet.setColumnWidth(1, 15 * 50)
 
-        val row = listOfRows[1]
-
+        //val row = listOfRows[0]
         val firstRow = row.rowNum
 
-        val lastRow = listOfRows[listOfRows.size-1].rowNum
+        //val lastRow = listOfRows[listOfRows.size-1].rowNum
+        //spe.setStatus(LAST_ROW, lastRow)
+
+        val lastRow = spe.getStatus(LAST_ROW, 0)-1
 
         //listOfRows.size
 
@@ -178,6 +276,8 @@ class MainActivity : AppCompatActivity() {
 
         sheet.addMergedRegion(CellRangeAddress(firstRow,lastRow,0,0))
         sheet.addMergedRegion(CellRangeAddress(firstRow,lastRow,1,1))
+
+        spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
     }
 
     private fun createTaskRow(wb: Workbook, sheet: Sheet, row: Row) {
@@ -225,14 +325,15 @@ class MainActivity : AppCompatActivity() {
         c.cellStyle = cs
     }
 
-    private fun fillRow(wb: Workbook, sheet: Sheet, rowNum: Int, project: String, description: String, start: String, end: String, time: String) {
+    private fun fillRow(wb: Workbook, sheet: Sheet, project: String, description: String, start: String, end: String, time: String) {
         val cs = wb.createCellStyle()
         cs.alignment = ALIGN_CENTER
         cs.verticalAlignment = VERTICAL_CENTER
         cs.wrapText = true
 
-        val row = sheet.createRow(rowNum)
-        listOfRows.add(row)
+        val row = sheet.createRow(spe.getStatus(LAST_ROW, 0))
+        //listOfRows.add(row)
+        spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
 
         var c = row.createCell(2)
         c.setCellValue(project)
@@ -260,7 +361,7 @@ class MainActivity : AppCompatActivity() {
         try {
             // Creating Input Stream
             //val file = File(context.getExternalFilesDir(null), filename)
-            val file = File(path, filename)
+            val file = File(context.getExternalFilesDir(null), filename)
             val myInput = FileInputStream(file)
 
             // Create a POIFSFileSystem object
@@ -312,8 +413,9 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private val viewGroup: ViewGroup? = null
 
+
+    /*
     private fun openDialog(id: Int) {
         val builder = AlertDialog.Builder(this, R.style.DialogTheme)
         val dialogView = layoutInflater.inflate(R.layout.dialog_layout, viewGroup)
@@ -326,6 +428,49 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton(R.string.cancel) { _, _ ->
             }.show()
+    }
+    */
+
+    private fun openDialog(description: Editable, addLunch: Boolean?) {
+        val builder = AlertDialog.Builder(this, R.style.DialogTheme)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_layout, viewGroup)
+        val dialogText: EditText = dialogView.findViewById(R.id.dialog_text)
+        val dialogEditText: EditText = dialogView.findViewById(R.id.dialog_edit_text)
+        dialogText.setText(spe.getStatus(CURRENT_WORK_NUMBER, ""))
+        dialogEditText.text = description
+        builder.setView(dialogView)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                if (dialogText.text.isNotEmpty() && dialogEditText.text.isNotEmpty()) {
+                    spe.setStatus(CURRENT_WORK_NUMBER, dialogText.text.toString())
+                    register(dialogText.text.toString(), dialogEditText.text.toString(), false)
+                    when {
+                        addLunch == null -> {
+                            workInProgress(false)
+                            createDateCells(wb, sheet, row, dp.getCurrentWeekday(), dp.getCurrentDate())
+                            //saveExcelFile(this, "test.xls")
+                            val fileName = dp.getCurrentMonthAndYear()
+                            saveExcelFile(this,"$fileName.xls")
+                        }
+                        addLunch -> register("LOU", "lounastauko", true)
+                    }
+                } else {
+                    openDialog(description, addLunch)
+                }
+            }
+            .setNegativeButton(R.string.cancel) { _, _ ->
+            }.show()
+    }
+
+    private fun register(workNumber: String, description: String, addLunch: Boolean) {
+        val startTime = spe.getStatus(START_TIME_WORK, dp.getCurrentTime())
+        val endTime = when {
+            addLunch -> dp.getEndTimeFromStartTime(startTime)
+            startTime.toFloat() > dp.getCurrentTime().toFloat() -> startTime
+            else -> dp.getCurrentTime()
+        }
+        val totalTime = dp.getTimeDifference(startTime, endTime)
+        fillRow(wb, sheet, workNumber, description, startTime, endTime, totalTime)
+        spe.setStatus(START_TIME_WORK, endTime)
     }
 
 }
