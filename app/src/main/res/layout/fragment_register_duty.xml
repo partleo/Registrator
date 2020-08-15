@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="date"
+        android:textSize="18sp"
+        android:textColor="@color/colorWhite"
+        android:fontFamily="sans-serif-condensed"
+        android:textStyle="bold"
+        />
+
+    <TextView
+        android:id="@+id/date_picker_text_view"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:padding="5dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:background="@drawable/rounded_edit_text"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="from"
+                android:textSize="18sp"
+                android:textColor="@color/colorWhite"
+                android:fontFamily="sans-serif-condensed"
+                android:textStyle="bold"
+                />
+
+            <TextView
+                android:id="@+id/time_picker_from_text_view"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:padding="5dp"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:background="@drawable/rounded_edit_text"
+                />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="to"
+                android:textSize="18sp"
+                android:textColor="@color/colorWhite"
+                android:fontFamily="sans-serif-condensed"
+                android:textStyle="bold"
+                />
+
+            <TextView
+                android:id="@+id/time_picker_to_text_view"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:padding="5dp"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:background="@drawable/rounded_edit_text"
+                />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/work_number_select"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_margin="20dp"
+        android:visibility="visible"
+        >
+
+        <EditText
+            android:id="@+id/work_number_input"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:padding="5dp"
+            android:maxLength="5"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:background="@drawable/rounded_edit_text"
+            android:windowSoftInputMode="stateHidden"
+            android:visibility="gone"
+            />
+
+        <RelativeLayout
+            android:id="@+id/spinner_background_layout"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_edit_text"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:inputType="phone"
+            android:layout_gravity="center"
+            android:gravity="center">
+
+            <Spinner
+                android:id="@+id/work_number_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="180dp"
+                />
+
+        </RelativeLayout>
+
+        <CheckBox
+            android:id="@+id/work_number_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="new work number"
+            android:textSize="18sp"
+            android:textColor="@color/colorWhite"
+            android:fontFamily="sans-serif-condensed"
+            android:textStyle="bold"
+            />
+
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/edit_text_description"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginStart="24sp"
+        android:layout_marginEnd="24sp"
+        android:background="@drawable/rounded_edit_text"
+        />
+
+    <Button
+        android:id="@+id/register_duty_button"
+        android:text="set time"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="20dp"
+        />
+
+</LinearLayout>

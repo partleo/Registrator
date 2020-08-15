@@ -9,15 +9,20 @@ class SharedPreferencesEditor {
 
     companion object {
         const val DO_NOT_ASK_AGAIN= "DoNotAskAgain"
-        const val CURRENT_MONTH = "CurrentMonth"
+        const val CURRENT_MONTH_AND_YEAR = "CurrentMonthAndYear"
         const val CURRENT_DATE = "CurrentDate"
 
         const val START_TIME_DAY = "StartTimeDay"
         const val START_TIME_WORK = "StartTimeWork"
 
         const val LAST_ROW = "LastRow"
+        const val LAST_COLUMN = "LastColumn"
+
+        const val CURRENT_WEEK = "CurrentWeek"
 
         const val CURRENT_WORK_NUMBER = "CurrentWorkNumber"
+
+        const val PATH = "Path"
     }
 
     private lateinit var c: Context

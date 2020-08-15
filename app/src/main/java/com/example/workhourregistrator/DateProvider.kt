@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 class DateProvider {
 
     private val sdf = SimpleDateFormat( "dd.MM.yyyy", Locale.getDefault())
-    private val stf = SimpleDateFormat("HH.mm", Locale.getDefault())
+    private val stf = SimpleDateFormat("HH:mm", Locale.getDefault())
     private val swf = SimpleDateFormat( "EE", Locale.getDefault())
 
     private val smf = SimpleDateFormat( "MM-yyyy", Locale.getDefault())
@@ -35,9 +35,9 @@ class DateProvider {
         val hours = TimeUnit.MINUTES.toHours(minutes)
         minutes -= TimeUnit.HOURS.toMinutes(hours)
         if (minutes < 10) {
-            return "$hours.0$minutes"
+            return "$hours:0$minutes"
         }
-        return "$hours.$minutes"
+        return "$hours:$minutes"
     }
 
     fun getEndTimeFromStartTime(startTime: String): String {
@@ -46,6 +46,10 @@ class DateProvider {
 
     fun getCurrentMonthAndYear(): String {
         return smf.format(System.currentTimeMillis())
+    }
+
+    fun getCurrentWeekNumber(): Int {
+        return Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)
     }
 
 }
