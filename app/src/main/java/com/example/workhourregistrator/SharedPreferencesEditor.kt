@@ -3,6 +3,7 @@ package com.example.workhourregistrator
 import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
+import android.widget.Toast
 
 
 class SharedPreferencesEditor {
@@ -23,6 +24,11 @@ class SharedPreferencesEditor {
         const val CURRENT_WORK_NUMBER = "CurrentWorkNumber"
 
         const val PATH = "Path"
+
+        const val WORK_NUMBER_LIST = "WorkNumbers"
+
+        const val EMAIL_ADDRESS = "EmailAddress"
+
     }
 
     private lateinit var c: Context
@@ -51,6 +57,40 @@ class SharedPreferencesEditor {
 
     fun getStatus(key: String, defValue: Int): Int {
         return sharedPreferences.getInt(key, defValue)
+    }
+
+    fun setWorkNumberList(phoneNumberList: ArrayList<String>) {
+        val set: Set<String> = HashSet(phoneNumberList)
+        sharedPreferences.edit().putStringSet(WORK_NUMBER_LIST, set).apply()
+    }
+
+    fun getWorkNumberList(): ArrayList<String> {
+        val set = sharedPreferences.getStringSet(WORK_NUMBER_LIST, setOf())
+        return ArrayList(set)
+    }
+
+    fun deleteWorkNumberFromList(phoneNumber: String) {
+        val list = getWorkNumberList()
+        if (list.contains(phoneNumber)) {
+            list.remove(phoneNumber)
+            //Toast.makeText(c, c.getText(R.string.number_deleted), Toast.LENGTH_SHORT).show()
+            setWorkNumberList(list)
+            /*
+            if (list.isEmpty()) {
+                setPhoneNumber("")
+                (c as MainActivity).recreate()
+            }
+            else {
+                if (phoneNumber == getPhoneNumber()) {
+                    setPhoneNumber(list[0])
+                }
+            }
+
+             */
+        }
+        else {
+            //Toast.makeText(c, c.getText(R.string.not_phone_number), Toast.LENGTH_SHORT).show()
+        }
     }
 
 }

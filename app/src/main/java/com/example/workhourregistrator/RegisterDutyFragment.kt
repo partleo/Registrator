@@ -6,12 +6,12 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.Toolbar
+import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.RelativeLayout
+import android.widget.*
 import kotlinx.android.synthetic.main.fragment_register_duty.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,12 +43,15 @@ class RegisterDutyFragment: Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         v = inflater.inflate(R.layout.fragment_register_duty, container, false)
         c = v.context
+        spe.setupSharedPreferencesEditor(c)
         return v
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupOnSetListeners()
+        setAdapter()
+        setOnItemSelectedListener()
 
         date_picker_text_view.text = sdf.format(System.currentTimeMillis())
         time_picker_from_text_view.text = stf.format(System.currentTimeMillis())
@@ -75,9 +78,6 @@ class RegisterDutyFragment: Fragment() {
         }
         register_duty_button.setOnClickListener {
             val date = sdf.parse(date_picker_text_view.text.toString())
-            val startTime = time_picker_from_text_view.text.toString()
-            val endTime = time_picker_to_text_view.text.toString()
-            val totalTime = dp.getTimeDifference(startTime, endTime)
             val project = if (work_number_checkbox.isChecked) {
                 work_number_input.text.toString()
             } else {
@@ -87,9 +87,17 @@ class RegisterDutyFragment: Fragment() {
                     work_number_spinner.selectedItem.toString()
                 }
             }
-
             val description = edit_text_description.text.toString()
-            m.writeIntoExcelFile(c, weekday, date, project, description, startTime, endTime, totalTime)
+            val startTime = time_picker_from_text_view.text.toString()
+            val endTime = time_picker_to_text_view.text.toString()
+            val totalTime = dp.getTimeDifference(startTime, endTime)
+
+            if (validateForm(project, description)) {
+                val list = spe.getWorkNumberList()
+                list.add(project)
+                spe.setWorkNumberList(list)
+                m.writeIntoExcelFile(c, weekday, date, project, description, startTime, endTime, totalTime)
+            }
         }
     }
 
@@ -137,5 +145,37 @@ class RegisterDutyFragment: Fragment() {
             true).show()
     }
 
+    private fun setAdapter() {
+        val adapter = ArrayAdapter(c, android.R.layout.simple_spinner_item, spe.getWorkNumberList())
+        work_number_spinner.adapter = adapter
+    }
+
+    private fun setOnItemSelectedListener() {
+        work_number_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(adapterView: AdapterView<*>, view: View?, position: Int, id: Long) {
+                if (position >= 0) {
+                    //password_input.setText(spe.getPasswordOfDevice(adapterView.getItemAtPosition(position).toString()))
+                }
+            }
+
+            override fun onNothingSelected(adapterView: AdapterView<*>) {
+                return
+            }
+        }
+    }
+
+    private fun validateForm(project: String, description: String): Boolean {
+        return when {
+            TextUtils.isEmpty(project) -> {
+                Toast.makeText(c, c.getText(R.string.field_empty), Toast.LENGTH_SHORT).show()
+                false
+            }
+            TextUtils.isEmpty(description) -> {
+                Toast.makeText(c, c.getText(R.string.field_empty), Toast.LENGTH_SHORT).show()
+                false
+            }
+            else -> true
+        }
+    }
 
 }

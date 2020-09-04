@@ -43,6 +43,7 @@ class MainFragment: Fragment() {
         return v
     }
 
+    /*
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val toolbar = v.rootView.findViewById<Toolbar>(R.id.main_toolbar)
@@ -114,5 +115,6 @@ class MainFragment: Fragment() {
         val dateParts = d.text.split(".")
         return "${dateParts[2]}-${dateParts[1]}-${dateParts[0]}"
     }
+    */
 
 }

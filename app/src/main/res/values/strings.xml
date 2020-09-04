@@ -16,4 +16,5 @@
     <string name="excel_file_saved_successfully">Duty registered successfully</string>
     <string name="excel_file_writing_error">Something went wrong! Duty NOT registered!</string>
 
+    <string name="field_empty">The fields cannot be empty!</string>
 </resources>

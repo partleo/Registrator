@@ -21,12 +21,14 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_MONTH_AND_YEAR
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_WEEK
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.EMAIL_ADDRESS
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_COLUMN
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_ROW
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import org.apache.poi.hssf.usermodel.*
 import org.apache.poi.hssf.util.CellRangeAddress
+import org.apache.poi.ss.format.CellFormatType
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.usermodel.CellStyle.ALIGN_CENTER
 import org.apache.poi.ss.usermodel.CellStyle.VERTICAL_CENTER
@@ -35,9 +37,7 @@ import org.apache.poi.ss.usermodel.CreationHelper
 import org.apache.poi.ss.usermodel.CellStyle
 import java.util.*
 import org.apache.poi.ss.usermodel.Workbook
-
-
-
+import org.apache.poi.ss.util.CellReference
 
 
 class MainActivity : AppCompatActivity() {
@@ -182,6 +182,9 @@ class MainActivity : AppCompatActivity() {
 
                 }
                 R.id.nav_share -> {
+                    val currentM = dp.getCurrentMonthAndYear()
+                    val filename = "$currentM.xls"
+                    sendEmail(this, filename)
 
                 }
                 R.id.nav_send -> {
@@ -199,8 +202,7 @@ class MainActivity : AppCompatActivity() {
     //-------------------------------------------
 
     private fun setupFragment(fragment: Fragment, tag: String) {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment, tag).commit()
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment, tag).commit()
     }
 
 
@@ -233,27 +235,25 @@ class MainActivity : AppCompatActivity() {
     private fun initializeExcelFile() {
         val currentM = dp.getCurrentMonthAndYear()
         val currentW = dp.getCurrentWeekNumber()
-        Log.d("tää", "initialize")
         when {
             currentM != spe.getStatus(CURRENT_MONTH_AND_YEAR, "") -> {
-                Log.d("tää", "eka")
                 wb = HSSFWorkbook()
                 sheet = wb.createSheet(currentM)
 
                 spe.setStatus(CURRENT_MONTH_AND_YEAR, currentM)
                 spe.setStatus(CURRENT_WEEK, currentW)
 
-                spe.setStatus(LAST_ROW, 0)
-                spe.setStatus(LAST_COLUMN, 0)
+                spe.setStatus(LAST_ROW, 9)
+                spe.setStatus(LAST_COLUMN, 7)
 
-                row = if (sheet.getRow(spe.getStatus(LAST_ROW, 0)) == null) {
-                    sheet.createRow(spe.getStatus(LAST_ROW, 0))
+                row = if (sheet.getRow(spe.getStatus(LAST_ROW, 9)) == null) {
+                    sheet.createRow(spe.getStatus(LAST_ROW, 9))
                 } else {
-                    sheet.getRow(spe.getStatus(LAST_ROW, 0))
+                    sheet.getRow(spe.getStatus(LAST_ROW, 9))
                 }
 
                 //listOfRows.add(row)
-                spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
+                spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 9)+1)
                 createTaskRow(wb, sheet, row)
 
                 saveExcelFile(this,"$currentM.xls")
@@ -286,7 +286,6 @@ class MainActivity : AppCompatActivity() {
                 */
             }*/
             else -> {
-                Log.d("tää", "kolmas")
                 readExcelFile(this, "$currentM.xls")
             }
         }
@@ -314,7 +313,7 @@ class MainActivity : AppCompatActivity() {
             os = FileOutputStream(file)
             wb.write(os)
             Log.d("FileUtils", "Writing file$file")
-            success = true
+
             Toast.makeText(context, getText(R.string.excel_file_saved_successfully), Toast.LENGTH_SHORT).show()
             Snackbar.make(window.decorView, getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
         } catch (e: IOException) {
@@ -326,6 +325,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("FileUtils", "Failed to save file", e)
             Toast.makeText(context, context.getText(R.string.excel_file_saved_successfully), Toast.LENGTH_SHORT).show()
             Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            success = true
             //Snackbar.make(window.decorView, getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
         } finally {
             try {
@@ -337,6 +337,7 @@ class MainActivity : AppCompatActivity() {
         return success
     }
 
+    /*
     private fun createDateCells(wb: Workbook, sheet: Sheet, row: Row, weekDay: String, date: String) {
         sheet.setColumnWidth(0, 15 * 50)
         sheet.setColumnWidth(1, 15 * 50)
@@ -375,6 +376,7 @@ class MainActivity : AppCompatActivity() {
 
         spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
     }
+    */
 
     private fun createTaskRow(wb: Workbook, sheet: Sheet, row: Row) {
         //Cell style for header row
@@ -399,40 +401,41 @@ class MainActivity : AppCompatActivity() {
         c.cellStyle = cs
         */
 
-        val column = spe.getStatus(LAST_COLUMN, 0)
+        //val column = spe.getStatus(LAST_COLUMN, 0)
 
         sheet.setColumnWidth(0, 15 * 200)
-        var c = row.createCell(column + 0)
+        var c = row.createCell( 0)
         c.setCellValue("viikonpäivä")
         c.cellStyle = cs
 
         sheet.setColumnWidth(1, 15 * 200)
-        c = row.createCell(column + 1)
+        c = row.createCell(1)
         c.setCellValue("päivämäärä")
         c.cellStyle = cs
 
-        c = row.createCell(column + 2)
+        c = row.createCell(2)
         c.setCellValue("projekti")
         c.cellStyle = cs
 
         sheet.setColumnWidth(3, 15 * 500)
-        c = row.createCell(column + 3)
+        c = row.createCell( 3)
         c.setCellValue("kuvaus")
         c.cellStyle = cs
 
-        c = row.createCell(column + 4)
+        c = row.createCell(4)
         c.setCellValue("alkaen")
         c.cellStyle = cs
 
-        c = row.createCell(column + 5)
+        c = row.createCell( 5)
         c.setCellValue("päättyen")
         c.cellStyle = cs
 
-        c = row.createCell(column + 6)
+        c = row.createCell(6)
         c.setCellValue("h/min")
         c.cellStyle = cs
     }
 
+    /*
     private fun fillRow(wb: Workbook, sheet: Sheet, project: String, description: String, start: String, end: String, time: String) {
         val cs = wb.createCellStyle()
         cs.alignment = ALIGN_CENTER
@@ -469,19 +472,17 @@ class MainActivity : AppCompatActivity() {
         c.setCellValue(time)
         c.cellStyle = cs
     }
+    */
 
     private fun readExcelFile(context: Context, filename: String) {
         try {
-            Log.d("tää", "try")
             val file = File(context.getExternalFilesDir(null), filename)
             val myInput = FileInputStream(file)
             val myFileSystem = POIFSFileSystem(myInput)
             wb = HSSFWorkbook(myFileSystem)
             sheet = wb.getSheetAt(0)
-            Log.d("tää", "wb and sheet are initialized here !!?")
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.d("tää", "wb and sheet are NOT initialized here !!?")
         }
     }
 
@@ -534,13 +535,20 @@ class MainActivity : AppCompatActivity() {
         val emailIntent = Intent(Intent.ACTION_SEND)
         // set the type to 'email'
         emailIntent.type = "vnd.android.cursor.dir/email"
-        val to = arrayOf("leo.partanen@kolumbus.fi")
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, to)
-        // the attachment
-        emailIntent.putExtra(Intent.EXTRA_STREAM, path)
-        // the mail subject
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Subject")
-        startActivity(Intent.createChooser(emailIntent, "Send email..."))
+        val to = arrayOf("leo.partanen@kolumbus.fi") //get email from spe !!!
+
+        if (to.isNotEmpty()) {
+            emailIntent.putExtra(Intent.EXTRA_EMAIL, to)
+            // the attachment
+            emailIntent.putExtra(Intent.EXTRA_STREAM, path)
+            // the mail subject
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Subject")
+            startActivity(Intent.createChooser(emailIntent, "Send email..."))
+        }
+        else {
+
+        }
+
     }
 
 
@@ -651,12 +659,137 @@ class MainActivity : AppCompatActivity() {
         cell.setCellValue(end)
         cell.cellStyle = cs
 
+        //-------------
+
         cell = row.createCell(6)
-        cell.setCellValue(time)
+        //cell.setCellValue(time)
+        cs.dataFormat = createHelper.createDataFormat().getFormat("[h]:mm")
+        val formula = "F${row.rowNum+1}-E${row.rowNum+1}"
+        cell.cellFormula = formula
         cell.cellStyle = cs
+
+        fillOtherCells(wb, row, project)
+
+
+
     }
 
-    fun writeIntoExcelFile(c: Context, weekday: String, date: Date, project: String, description: String, start: String, end: String, time: String) {
+    fun fillOtherCells(wb: Workbook, row: Row, project: String) {
+        val createHelper = wb.creationHelper
+        val cs = wb.createCellStyle()
+        cs.alignment = ALIGN_CENTER
+        cs.verticalAlignment = VERTICAL_CENTER
+        cs.wrapText = true
+
+        val csf = cs
+        csf.dataFormat = createHelper.createDataFormat().getFormat("[h]:mm")
+
+        //wb.getSheetAt(0).createRow(8)
+        var cell = wb.getSheetAt(0).createRow(8).createCell(6)
+        cell.cellFormula = "SUM(G11:G${row.rowNum+1})"
+        cell.cellStyle = cs
+
+
+        var column = spe.getStatus(LAST_COLUMN, 7)
+
+        if (column == 7) {
+            cell = wb.getSheetAt(0).getRow(9).createCell(7)
+            cell.setCellValue(project)
+            cell.cellStyle = cs
+
+            //
+
+
+
+            cell = wb.getSheetAt(0).getRow(8).createCell(7)
+            val time = wb.getSheetAt(0).getRow(10).getCell(6).numericCellValue
+            cell.cellFormula = "SUM(H11:H${row.rowNum+1})" ///
+            cell.cellStyle = csf
+
+            //
+
+            cell = wb.getSheetAt(0).getRow(10).createCell(7)
+            val x = CellReference.convertNumToColString(cell.columnIndex)
+            val s = "$"
+            cell.cellFormula = "SUMIF(${s}C${row.rowNum+1},$x$10,${s}G${row.rowNum+1})"
+            cell.cellStyle = cs
+
+            spe.setStatus(LAST_COLUMN, column+1)
+        }
+        else {
+            var isNewWorkNumber = true
+            for (i in 0..spe.getStatus(LAST_COLUMN, 7)-6) {
+                cell = wb.getSheetAt(0).getRow(9).getCell(7+i)
+                if (cell == null) {
+                    break
+                }
+                if (project == cell.stringCellValue) {
+                    isNewWorkNumber = false
+
+                    cell = row.createCell(7+i)
+
+
+
+                    val x = CellReference.convertNumToColString(cell.columnIndex)
+                    val s = "$"
+                    //cell.setCellValue(row.createCell(6).stringCellValue)
+                    cell.cellFormula = "SUMIF(${s}C${row.rowNum+1},$x$10,${s}G${row.rowNum+1})"//"SUM(G11:G${row.rowNum+1})"
+                    //"SUMIF(\$C11;H\$10;\$G11)"
+
+                    //"SUMIF($C12;H\$10;$G12)"
+                    cell.cellStyle = cs
+                    break
+                }
+            }
+            if (isNewWorkNumber) {
+                //write here to the excel file
+
+
+                column = spe.getStatus(LAST_COLUMN, 7)
+
+                cell = wb.getSheetAt(0).getRow(9).createCell(column)
+                cell.setCellValue(project)
+                cell.cellStyle = cs
+
+                cell = row.createCell(column)
+                //cell.setCellValue(row.getCell(6).stringCellValue)
+                cell.cellFormula = "G${row.rowNum+1}"
+                cell.cellStyle = cs
+
+
+
+
+                val x = CellReference.convertNumToColString(column)
+
+                cell = wb.getSheetAt(0).getRow(8).createCell(column)
+                //cell.cellFormula = "SUM(${x}11:${x})"
+                cell.cellFormula = "SUM(${x}11:INDEX($x:$x,MATCH(9.99E+307,$x:$x),1))"
+                cell.cellStyle = csf
+
+                spe.setStatus(LAST_COLUMN, column+1)
+
+            }
+
+            for (i in 0..spe.getStatus(LAST_COLUMN, 7)-8) {
+                cell = wb.getSheetAt(0).getRow(8).createCell(7 + i)
+                if (cell != null) {
+
+                    Log.d("tää", "${cell.rowIndex}, ${cell.columnIndex}")
+
+                    val x = CellReference.convertNumToColString(cell.columnIndex)
+
+                    cell.cellFormula = "SUM(${x}11:$x${row.rowNum+1})"
+                    cell.cellStyle = cs
+                } else {
+                    Log.d("tää", "null")
+                }
+            }
+        }
+
+
+    }
+
+    fun writeIntoExcelFile(c: Context, weekday: String, date: Date, project: String, description: String, start: String, end: String, time: String): Boolean {
         val triple = initializeExcelFileNEW(c)
         wb = triple.first
         sheet = triple.second
@@ -668,7 +801,7 @@ class MainActivity : AppCompatActivity() {
 
 
         //sortSheet(wb, sheet)
-        saveExcelFile(c, filename)
+        return saveExcelFile(c, filename)
     }
 
     fun initializeExcelFileNEW(context: Context): Triple<HSSFWorkbook, Sheet, String> {
@@ -680,11 +813,11 @@ class MainActivity : AppCompatActivity() {
                 sheet = wb.createSheet(currentM)
 
                 spe.setStatus(CURRENT_MONTH_AND_YEAR, currentM)
-                spe.setStatus(LAST_ROW, 0)
+                spe.setStatus(LAST_ROW, 9)
 
-                row = sheet.createRow(spe.getStatus(LAST_ROW, 0))
+                row = sheet.createRow(spe.getStatus(LAST_ROW, 9))
 
-                spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
+                spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 9)+1)
 
                 createTaskRow(wb, sheet, row)
 
