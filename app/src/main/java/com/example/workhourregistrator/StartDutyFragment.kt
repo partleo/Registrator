@@ -3,20 +3,28 @@ package com.example.workhourregistrator
 import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.widget.Toolbar
+import androidx.fragment.app.Fragment
+import androidx.appcompat.widget.Toolbar
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.*
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.START_TIME_WORK
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.WORK_IN_PROGRESS
+import kotlinx.android.synthetic.main.fragment_register_duty.*
 import kotlinx.android.synthetic.main.fragment_start_duty.*
+import kotlinx.android.synthetic.main.fragment_start_duty.edit_text_description
+import kotlinx.android.synthetic.main.fragment_start_duty.spinner_background_layout
+import kotlinx.android.synthetic.main.fragment_start_duty.work_number_checkbox
+import kotlinx.android.synthetic.main.fragment_start_duty.work_number_input
+import kotlinx.android.synthetic.main.fragment_start_duty.work_number_spinner
 import java.text.SimpleDateFormat
 import java.util.*
 
 
-class StartDutyFragment: Fragment() {
+class StartDutyFragment: androidx.fragment.app.Fragment() {
 
     private lateinit var v: View
     private lateinit var c: Context
@@ -44,29 +52,64 @@ class StartDutyFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val toolbar = v.rootView.findViewById<Toolbar>(R.id.main_toolbar)
+        //val toolbar = v.rootView.findViewById<Toolbar>(R.id.main_toolbar)
         //toolbar.setTitle(R.string.card_text_3)
+
+        setAdapter()
+        setOnItemSelectedListener()
+
+        if (spe.getStatus(WORK_IN_PROGRESS, false)) {
+            enableDisableButtons()
+        }
 
         start_duty_button.setOnClickListener {
             spe.setStatus(START_TIME_WORK, stf.format(cal.time))
-            end_duty_button.isEnabled = true
-            end_day_button.isEnabled = true
-            start_duty_button.isEnabled = false
+            enableDisableButtons()
+            spe.setStatus(WORK_IN_PROGRESS, true)
         }
         end_duty_button.setOnClickListener {
-            registerDuty()
+            registerDuty(true)
         }
         end_day_button.setOnClickListener {
-            registerDuty()
-            start_duty_button.isEnabled = true
-            end_duty_button.isEnabled = false
-            end_day_button.isEnabled = false
+            registerDuty(false)
+        }
+
+        work_number_checkbox.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                spinner_background_layout.visibility = RelativeLayout.GONE
+                work_number_input.visibility = EditText.VISIBLE
+            }
+            else {
+                work_number_input.visibility = EditText.GONE
+                spinner_background_layout.visibility = RelativeLayout.VISIBLE
+            }
         }
     }
 
-    private fun registerDuty() {
+    private fun enableDisableButtons() {
+        start_duty_button.isEnabled = !start_duty_button.isEnabled
+        end_duty_button.isEnabled = !end_duty_button.isEnabled
+        end_day_button.isEnabled = !end_day_button.isEnabled
+
+        start_duty_button.visibility = if (start_duty_button.visibility == Button.GONE) {
+            Button.VISIBLE
+        } else {
+            Button.GONE
+        }
+        end_duty_button.visibility = if (end_duty_button.visibility == Button.GONE) {
+            Button.VISIBLE
+        } else {
+            Button.GONE
+        }
+        end_day_button.visibility = if (end_day_button.visibility == Button.GONE) {
+            Button.VISIBLE
+        } else {
+            Button.GONE
+        }
+    }
+
+    private fun registerDuty(workInProgress: Boolean) {
         val date = cal.time
-        val weekday = swf.format(date)
         val project = if (work_number_checkbox.isChecked) {
             work_number_input.text.toString()
         } else {
@@ -78,17 +121,21 @@ class StartDutyFragment: Fragment() {
         }
         val description = edit_text_description.text.toString()
         val startTime = spe.getStatus(START_TIME_WORK, "")
-        val endTime = stf.format(cal.time)
-        val totalTime = dp.getTimeDifference(startTime, endTime)
-
-
+        val endTime = stf.format(Date(System.currentTimeMillis()))
 
         if (validateForm(project, description)) {
             val list = spe.getWorkNumberList()
             list.add(project)
             spe.setWorkNumberList(list)
-            m.writeIntoExcelFile(c, weekday, date, project, description, startTime, endTime, totalTime)
+
             spe.setStatus(START_TIME_WORK, endTime)
+            m.writeIntoExcelFile(c, date, project, description, startTime, endTime)
+
+
+            if (!workInProgress) {
+                spe.setStatus(WORK_IN_PROGRESS, workInProgress)
+                enableDisableButtons()
+            }
         }
     }
 
@@ -103,6 +150,25 @@ class StartDutyFragment: Fragment() {
                 false
             }
             else -> true
+        }
+    }
+
+    private fun setAdapter() {
+        val adapter = ArrayAdapter(c, android.R.layout.simple_spinner_item, spe.getWorkNumberList())
+        work_number_spinner.adapter = adapter
+    }
+
+    private fun setOnItemSelectedListener() {
+        work_number_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(adapterView: AdapterView<*>, view: View?, position: Int, id: Long) {
+                if (position >= 0) {
+                    //password_input.setText(spe.getPasswordOfDevice(adapterView.getItemAtPosition(position).toString()))
+                }
+            }
+
+            override fun onNothingSelected(adapterView: AdapterView<*>) {
+                return
+            }
         }
     }
 }

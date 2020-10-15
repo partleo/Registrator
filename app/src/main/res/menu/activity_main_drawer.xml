@@ -1,37 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:tools="http://schemas.android.com/tools"
-      tools:showIn="navigation_view">
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:showIn="navigation_view">
 
     <group android:checkableBehavior="single">
         <item
-                android:id="@+id/nav_home"
-                android:icon="@drawable/ic_launcher_foreground"
-                android:title="Home"/>
+            android:id="@+id/nav_home"
+            android:icon="@drawable/registrator_home"
+            android:title="Home"/>
         <item
-                android:id="@+id/nav_start"
-            android:icon="@drawable/ic_launcher_foreground"
-                android:title="Start duty"/>
+            android:id="@+id/nav_start"
+            android:icon="@drawable/registrator_start"
+            android:title="Start duty"/>
         <item
-                android:id="@+id/nav_register"
-            android:icon="@drawable/ic_launcher_foreground"
-                android:title="Register duty"/>
+            android:id="@+id/nav_register_1"
+            android:icon="@drawable/registrator_register"
+            android:title="Register duty"/>
         <item
-                android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_launcher_foreground"
-                android:title="Tools"/>
+            android:id="@+id/nav_register_2"
+            android:icon="@drawable/registrator_register"
+            android:title="Register day off"/>
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Options">
         <menu>
             <item
-                    android:id="@+id/nav_share"
-                android:icon="@drawable/ic_launcher_foreground"
-                    android:title="Share"/>
-            <item
-                    android:id="@+id/nav_send"
-                android:icon="@drawable/ic_launcher_foreground"
-                    android:title="Send"/>
+                android:id="@+id/nav_share"
+                android:icon="@drawable/registrator_share"
+                android:title="Share"/>
         </menu>
     </item>
 

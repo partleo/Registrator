@@ -1,5 +1,7 @@
 <resources>
+    <string name="app_id">96141ee0–fb7f–4b27–89c2-ec53f3dd469d</string>
     <string name="app_name">WorkHourRegistrator</string>
+    <string name="menu">Menu</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -8,13 +10,30 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
+    <string name="choose_work_number">Choose work number:</string>
+    <string name="new_work_number">New work number</string>
+
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="open">Open</string>
+    <string name="share">Share</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
+
+
+    <string name="excel_file_saved">Saved into the Excel file</string>
     <string name="excel_file_saved_successfully">Duty registered successfully</string>
-    <string name="excel_file_writing_error">Something went wrong! Duty NOT registered!</string>
+    <string name="excel_file_writing_error">Something went wrong! Duty NOT registered properly!</string>
+
+    <string name="choose_option">Choose option:</string>
+    <string name="are_you_sure">Are you sure?</string>
+
+    <string name="excel_file_deleted">File deleted successfully</string>
+    <string name="excel_file_delete_error">Something went wrong! File not deleted!</string>
 
     <string name="field_empty">The fields cannot be empty!</string>
+
+    <string name="time_display_format">%1$s:%2$s</string>
 </resources>

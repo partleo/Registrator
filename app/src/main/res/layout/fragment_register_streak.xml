@@ -5,31 +5,29 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-
-    android:background="@drawable/background_curved"
     >
 
+
     <LinearLayout
+        android:id="@+id/date_picker_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginStart="24sp"
         android:layout_marginEnd="24sp"
+        android:padding="10dp"
+        android:background="@drawable/rounded_edit_text"
         android:baselineAligned="false"
         android:weightSum="2">
 
         <LinearLayout
-            android:id="@+id/date_picker_linear_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginEnd="5dp"
-            android:padding="10dp"
-            android:background="@drawable/rounded_edit_text"
             android:layout_weight="1">
 
             <TextView
-                android:id="@+id/date_text_view"
+                android:id="@+id/date_from_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -41,7 +39,7 @@
                 />
 
             <TextView
-                android:id="@+id/month_text_view"
+                android:id="@+id/month_from_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -52,7 +50,7 @@
                 />
 
             <TextView
-                android:id="@+id/year_text_view"
+                android:id="@+id/year_from_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -66,103 +64,47 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginStart="5dp"
-            android:layout_weight="1"
-            android:weightSum="2"
-            >
+            android:layout_weight="1">
 
-            <LinearLayout
-                android:id="@+id/time_from_picker_linear_layout"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginBottom="5dp"
-                android:padding="10dp"
+            <TextView
+                android:id="@+id/date_to_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:gravity="center"
-                android:background="@drawable/rounded_edit_text"
-                android:orientation="horizontal"
-                android:layout_weight="1"
-                android:weightSum="3"
-                >
+                android:textSize="36sp"
+                android:fontFamily="cursive"
+                android:textStyle="bold"
+                android:textColor="@color/colorWhite"
+                />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="from"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorTransparentWhite2"
-                    android:textStyle="bold"
-                    android:layout_weight="2"
-                    />
-
-                <TextView
-                    android:id="@+id/time_from_text_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:textSize="24sp"
-                    android:fontFamily="cursive"
-                    android:textStyle="bold"
-                    android:textColor="@color/colorWhite"
-                    android:layout_weight="1"
-                    />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/time_to_picker_linear_layout"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginTop="5dp"
+            <TextView
+                android:id="@+id/month_to_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/rounded_edit_text"
-                android:orientation="horizontal"
-                android:layout_weight="1"
-                android:weightSum="3"
-                >
+                android:textSize="18sp"
+                android:textColor="@color/colorWhite"
+                android:textStyle="bold"
+                />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="to"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorTransparentWhite2"
-                    android:textStyle="bold"
-                    android:layout_weight="2"
-                    />
-
-                <TextView
-                    android:id="@+id/time_to_text_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:textSize="24sp"
-                    android:fontFamily="cursive"
-                    android:textStyle="bold"
-                    android:textColor="@color/colorWhite"
-                    android:layout_weight="1"
-                    />
-
-            </LinearLayout>
-
+            <TextView
+                android:id="@+id/year_to_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textSize="14sp"
+                android:textColor="@color/colorTransparentWhite2"
+                android:textStyle="bold"
+                />
 
         </LinearLayout>
 
     </LinearLayout>
-
-
-
-
-
-
 
 
 

@@ -10,8 +10,10 @@ class SharedPreferencesEditor {
 
     companion object {
         const val DO_NOT_ASK_AGAIN= "DoNotAskAgain"
-        const val CURRENT_MONTH_AND_YEAR = "CurrentMonthAndYear"
+        //const val CURRENT_MONTH_AND_YEAR = "CurrentMonthAndYear"
         const val CURRENT_DATE = "CurrentDate"
+
+        const val MONTH_AND_YEAR = "MonthAndYear"
 
         const val START_TIME_DAY = "StartTimeDay"
         const val START_TIME_WORK = "StartTimeWork"
@@ -28,6 +30,11 @@ class SharedPreferencesEditor {
         const val WORK_NUMBER_LIST = "WorkNumbers"
 
         const val EMAIL_ADDRESS = "EmailAddress"
+
+        const val WORK_IN_PROGRESS = "InProgress"
+
+
+        const val WORKBOOK_LIST = "WorkbookList"
 
     }
 
@@ -57,6 +64,14 @@ class SharedPreferencesEditor {
 
     fun getStatus(key: String, defValue: Int): Int {
         return sharedPreferences.getInt(key, defValue)
+    }
+
+    fun setStatus(key: String, status: Boolean) {
+        sharedPreferences.edit().putBoolean(key, status).apply()
+    }
+
+    fun getStatus(key: String, defValue: Boolean): Boolean {
+        return sharedPreferences.getBoolean(key, defValue)
     }
 
     fun setWorkNumberList(phoneNumberList: ArrayList<String>) {
@@ -90,6 +105,28 @@ class SharedPreferencesEditor {
         }
         else {
             //Toast.makeText(c, c.getText(R.string.not_phone_number), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun setWorkbookList(workbookList: ArrayList<String>) {
+        val set: Set<String> = HashSet(workbookList)
+        sharedPreferences.edit().putStringSet(WORKBOOK_LIST, set).apply()
+    }
+
+    fun getWorkbookList(): ArrayList<String> {
+        val set = sharedPreferences.getStringSet(WORKBOOK_LIST, setOf())
+        return ArrayList(set)
+    }
+
+    fun deleteWorkbookFromList(workbook: String) {
+        val list = getWorkbookList()
+        if (list.contains(workbook)) {
+            list.remove(workbook)
+            //Toast.makeText(c, "DELETED", Toast.LENGTH_SHORT).show()
+            setWorkbookList(list)
+        }
+        else {
+            //Toast.makeText(c, "NOT DELETED !!!", Toast.LENGTH_SHORT).show()
         }
     }
 

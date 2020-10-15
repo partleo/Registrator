@@ -4,8 +4,8 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.widget.Toolbar
+import androidx.fragment.app.Fragment
+import androidx.appcompat.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-class MainFragment: Fragment() {
+class MainFragment: androidx.fragment.app.Fragment() {
 
     private lateinit var v: View
     private lateinit var c: Context
@@ -37,7 +37,7 @@ class MainFragment: Fragment() {
     private var weekDay = ""
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        v = inflater.inflate(R.layout.fragment_start_duty, container, false)
+        v = inflater.inflate(R.layout.fragment_main, container, false)
         c = v.context
         sp.setupSharedPreferencesEditor(c)
         return v

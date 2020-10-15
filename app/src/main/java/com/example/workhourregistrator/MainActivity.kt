@@ -2,7 +2,7 @@ package com.example.workhourregistrator
 
 import android.app.Activity
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import org.apache.poi.hssf.util.HSSFColor
@@ -12,20 +12,45 @@ import java.io.IOException
 import org.apache.poi.poifs.filesystem.POIFSFileSystem
 import java.io.FileInputStream
 import android.content.Intent
-import android.support.design.widget.Snackbar
-import android.support.v4.app.Fragment
-import android.support.v4.content.FileProvider
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
+import android.net.Uri
+import android.os.Handler
+import android.view.LayoutInflater
+import com.google.android.material.snackbar.Snackbar
+import androidx.fragment.app.Fragment
+import androidx.core.content.FileProvider
+import androidx.core.view.GravityCompat
+import androidx.appcompat.app.ActionBarDrawerToggle
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
-import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_MONTH_AND_YEAR
+import androidx.appcompat.app.AlertDialog
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_WEEK
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.EMAIL_ADDRESS
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_COLUMN
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_ROW
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.MONTH_AND_YEAR
+/*
+import com.microsoft.onedrivesdk.picker.IPicker
+import com.microsoft.onedrivesdk.picker.IPickerResult
+import com.microsoft.onedrivesdk.picker.LinkType
+import com.microsoft.onedrivesdk.picker.Picker
+import com.microsoft.onedrivesdk.saver.ISaver
+import com.microsoft.onedrivesdk.saver.Saver
+import com.microsoft.onedrivesdk.saver.SaverException
+import com.onedrive.sdk.authentication.ADALAuthenticator
+import com.onedrive.sdk.authentication.MSAAuthenticator
+import com.onedrive.sdk.concurrency.ICallback
+import com.onedrive.sdk.core.ClientException
+import com.onedrive.sdk.core.DefaultClientConfig
+import com.onedrive.sdk.core.IClientConfig
+import com.onedrive.sdk.extensions.Drive
+import com.onedrive.sdk.extensions.IOneDriveClient
+import com.onedrive.sdk.extensions.OneDriveClient
+*/
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
+import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.fragment_start_duty.*
 import org.apache.poi.hssf.usermodel.*
 import org.apache.poi.hssf.util.CellRangeAddress
 import org.apache.poi.ss.format.CellFormatType
@@ -38,6 +63,7 @@ import org.apache.poi.ss.usermodel.CellStyle
 import java.util.*
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.util.CellReference
+import java.text.SimpleDateFormat
 
 
 class MainActivity : AppCompatActivity() {
@@ -48,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         val s = File.separator!!
         //val folder = Environment.getExternalStorageDirectory().toString() + s + MAIN_FOLDER + s + EXCEL_FOLDER
         //val path = Environment.getExternalStorageDirectory().toString() + s + MAIN_FOLDER + s + EXCEL_FOLDER + s
-        private const val ACTION = "Action"
+        const val ACTION = "Action"
     }
 
     private val dp = DateProvider()
@@ -65,11 +91,87 @@ class MainActivity : AppCompatActivity() {
 
     private val viewGroup: ViewGroup? = null
 
+    private val swf = SimpleDateFormat("EE", Locale.getDefault())
+
+
+    //-------------------------------------------------------------------------------------------------------------
+
+    //var oneDriveClient: IOneDriveClient? = null
+
+    //-------------------------------------------------------------------------------------------------------------
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         //spe.setupSharedPreferencesEditor(this)
-        setupFragment(MainFragment(), "tag")
+        setupFragment(HomeFragment(), "tag")
+
+        //-------------------------------------------------------------------------------------------------------------
+
+        /*
+        val msaAuthenticator: MSAAuthenticator = object: MSAAuthenticator() {
+            override fun getClientId(): String {
+                return "" //"<msa-client-id>";
+            }
+
+            override fun getScopes(): Array<String> {
+                return arrayOf("onedrive.appfolder")
+            }
+        }
+
+        val adalAuthenticator: ADALAuthenticator = object: ADALAuthenticator() {
+            override fun getClientId(): String {
+                return getString(R.string.app_id) //"<adal-client-id>";
+            }
+
+            override fun getRedirectUrl(): String {
+                return "https://localhost";
+            }
+        }
+
+        val oneDriveConfig: IClientConfig = DefaultClientConfig.createWithAuthenticators(
+            msaAuthenticator,
+            adalAuthenticator)
+
+        val callback: ICallback<IOneDriveClient> = object: ICallback<IOneDriveClient> {
+            override fun success(result: IOneDriveClient?) {
+
+            }
+
+            override fun failure(ex: ClientException?) {
+
+            }
+        }
+
+
+        OneDriveClient.Builder()
+            .fromConfig(DefaultClientConfig.createWithAuthenticator(msaAuthenticator))
+            .loginAndBuildClient(this, object: ICallback<IOneDriveClient> {
+                override fun success(result: IOneDriveClient?) {
+                    oneDriveClient = result
+                }
+
+                override fun failure(ex: ClientException?) {
+                    oneDriveClient = null
+                }
+            });
+
+
+        //val oneDriveClient: IOneDriveClient = OneDriveClient.Builder().fromConfig(oneDriveConfig).loginAndBuildClient(this, callback)
+
+        oneDriveClient!!
+            .drive
+            .buildRequest()
+            .get(object: ICallback<Drive> {
+                override fun success(result: Drive) {
+                    Log.d("tää", "success")
+                }
+                override fun failure(ex: ClientException?) {
+                    Log.d("tää", "failure")
+                }
+            });
+
+        //-------------------------------------------------------------------------------------------------------------*/
 
         //spe.setStatus(LAST_ROW, 0) //remove this later!!
 
@@ -170,24 +272,21 @@ class MainActivity : AppCompatActivity() {
         nav_view.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.nav_home -> {
-                    setupFragment(MainFragment(), "tag")
+                    setupFragment(HomeFragment(), "tag")
                 }
                 R.id.nav_start -> {
                     setupFragment(StartDutyFragment(), "tag")
                 }
-                R.id.nav_register -> {
+                R.id.nav_register_1 -> {
                     setupFragment(RegisterDutyFragment(), "tag")
                 }
-                R.id.nav_manage -> {
-
+                R.id.nav_register_2 -> {
+                    setupFragment(RegisterStreakFragment(), "tag")
                 }
                 R.id.nav_share -> {
                     val currentM = dp.getCurrentMonthAndYear()
                     val filename = "$currentM.xls"
                     sendEmail(this, filename)
-
-                }
-                R.id.nav_send -> {
 
                 }
             }
@@ -197,11 +296,70 @@ class MainActivity : AppCompatActivity() {
         //nav_view.setNavigationItemSelectedListener(this)
 
         //-------------------------------------------
+
+
+        /*
+        test_button.setOnClickListener {
+            mPicker = Picker.createPicker(ONEDRIVE_APP_ID)
+            mPicker.startPicking(this, LinkType.DownloadLink) //LinkType.DownloadLink
+        }
+
+        test_button2.setOnClickListener {
+            // create example file to save to OneDrive
+            val currentM = dp.getCurrentMonthAndYear()
+            val fileName = "$currentM.xls"
+            //val f: File = File(this.filesDir, filename)
+
+            val file = File(this.getExternalFilesDir(null), fileName)
+
+            // create and launch the saver
+            mSaver = Saver.createSaver(ONEDRIVE_APP_ID)
+            mSaver.startSaving(this, fileName, Uri.fromFile(file))
+        }
+        */
     }
+
+    /*
+    private lateinit var mPicker: IPicker
+    private val ONEDRIVE_APP_ID = "96141ee0-fb7f-4b27-89c2-ec53f3dd469d"
+
+    // Within the activity's class definition
+    private lateinit var mSaver: ISaver
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Log.d("tää", "$requestCode")
+        when (requestCode) {
+            61680 -> {
+                val result: IPickerResult? = mPicker.getPickerResult(requestCode, resultCode, data)
+                if (result != null) {
+                    Log.d("tää", "Link to file '" + result.name + ": " + result.link)
+                    return
+                }
+                super.onActivityResult(requestCode, resultCode, data)
+            }
+            61937 -> {
+                // check that the file was successfully saved to OneDrive
+                try {
+                    mSaver.handleSave(requestCode, resultCode, data)
+                } catch (e: SaverException) {
+                    // Log error information
+                    Log.e("tää", e.errorType.toString()); // Provides one of the SaverError enum
+                    //Log.e("tää", e.debugErrorInfo); // Detailed debug error message
+                }
+            }
+            2 -> {
+
+            }
+        }
+    }
+    */
+
+
 
     //-------------------------------------------
 
-    private fun setupFragment(fragment: Fragment, tag: String) {
+    private fun setupFragment(fragment: androidx.fragment.app.Fragment, tag: String) {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment, tag).commit()
     }
 
@@ -232,6 +390,7 @@ class MainActivity : AppCompatActivity() {
     }
     main fragment*/
 
+    /*
     private fun initializeExcelFile() {
         val currentM = dp.getCurrentMonthAndYear()
         val currentW = dp.getCurrentWeekNumber()
@@ -290,46 +449,37 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    */
 
-    private fun saveExcelFile(context: Context, fileName: String): Boolean {
-
+    private fun saveExcelFile(context: Context, workbook: Workbook, fileName: String): Boolean {
         var success = false
 
-        //New Workbook
-
-        /*
-        sheet1.setColumnWidth(0, 15 * 150)
-        sheet1.setColumnWidth(1, 15 * 150)
-        sheet1.setColumnWidth(2, 15 * 150)
-        */
-
-
-        // Create a path where we will place our List of objects on external storage
         val file = File(context.getExternalFilesDir(null), fileName)
-        //val file = File(path, fileName)
         var os: FileOutputStream? = null
 
         try {
             os = FileOutputStream(file)
-            wb.write(os)
+            workbook.write(os)
             Log.d("FileUtils", "Writing file$file")
+            //Toast.makeText(context, getText(R.string.excel_file_saved_successfully), Toast.LENGTH_SHORT).show()
+            Snackbar.make((context as Activity).window.decorView, getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
 
-            Toast.makeText(context, getText(R.string.excel_file_saved_successfully), Toast.LENGTH_SHORT).show()
-            Snackbar.make(window.decorView, getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
         } catch (e: IOException) {
             Log.d("FileUtils", "Error writing $file", e)
-            Toast.makeText(context, context.getText(R.string.excel_file_saved_successfully), Toast.LENGTH_SHORT).show()
-            Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            //Toast.makeText(context, context.getText(R.string.excel_file_writing_error), Toast.LENGTH_SHORT).show()
+            Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
             //Snackbar.make(window.decorView, getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
         } catch (e: Exception) {
             Log.d("FileUtils", "Failed to save file", e)
-            Toast.makeText(context, context.getText(R.string.excel_file_saved_successfully), Toast.LENGTH_SHORT).show()
-            Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
-            success = true
+            //Toast.makeText(context, context.getText(R.string.excel_file_writing_error), Toast.LENGTH_SHORT).show()
+            Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
             //Snackbar.make(window.decorView, getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+
         } finally {
             try {
                 os?.close()
+                success = true
+
             } catch (e: Exception) {
                 Log.d("FileUtils", "Failed to close output stream", e)
             }
@@ -380,19 +530,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun createTaskRow(wb: Workbook, sheet: Sheet, row: Row) {
         //Cell style for header row
-        val cs = wb.createCellStyle()
+        /*
+        val cs = wb.createCellStyle() //-------------------------------------------------------------------!!!
         cs.fillForegroundColor = HSSFColor.GREEN.index
         cs.fillPattern = HSSFCellStyle.SOLID_FOREGROUND
         cs.alignment = ALIGN_CENTER
         cs.verticalAlignment = VERTICAL_CENTER
-
-        
-
         val font = wb.createFont()
         font.color = HSSFColor.WHITE.index
         font.boldweight = HSSFFont.BOLDWEIGHT_BOLD
         cs.setFont(font)
         cs.wrapText = true
+        */
+        cellStyleTask = wb.createCellStyle()
+        cellStyleTask.setupCellStyleTask(wb)
 
         /*
         sheet.addMergedRegion(CellRangeAddress(0,0,0,1))
@@ -406,33 +557,33 @@ class MainActivity : AppCompatActivity() {
         sheet.setColumnWidth(0, 15 * 200)
         var c = row.createCell( 0)
         c.setCellValue("viikonpäivä")
-        c.cellStyle = cs
+        c.cellStyle = cellStyleTask
 
         sheet.setColumnWidth(1, 15 * 200)
         c = row.createCell(1)
         c.setCellValue("päivämäärä")
-        c.cellStyle = cs
+        c.cellStyle = cellStyleTask
 
         c = row.createCell(2)
         c.setCellValue("projekti")
-        c.cellStyle = cs
+        c.cellStyle = cellStyleTask
 
         sheet.setColumnWidth(3, 15 * 500)
         c = row.createCell( 3)
         c.setCellValue("kuvaus")
-        c.cellStyle = cs
+        c.cellStyle = cellStyleTask
 
         c = row.createCell(4)
         c.setCellValue("alkaen")
-        c.cellStyle = cs
+        c.cellStyle = cellStyleTask
 
         c = row.createCell( 5)
         c.setCellValue("päättyen")
-        c.cellStyle = cs
+        c.cellStyle = cellStyleTask
 
         c = row.createCell(6)
         c.setCellValue("h/min")
-        c.cellStyle = cs
+        c.cellStyle = cellStyleTask
     }
 
     /*
@@ -474,6 +625,7 @@ class MainActivity : AppCompatActivity() {
     }
     */
 
+    /*
     private fun readExcelFile(context: Context, filename: String) {
         try {
             val file = File(context.getExternalFilesDir(null), filename)
@@ -485,6 +637,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
+    */
 
     /*
     private fun readExcelFile(context: Context, filename: String) {
@@ -524,7 +677,7 @@ class MainActivity : AppCompatActivity() {
     }
     */
 
-    private fun sendEmail(context: Context, fileName: String) {
+    fun sendEmail(context: Context, fileName: String) {
         val file = File(context.getExternalFilesDir(null), fileName)
         //val fileLocation = File(Environment.getExternalStorageDirectory().absolutePath, fileName)
         //val path = Uri.fromFile(file)
@@ -535,15 +688,14 @@ class MainActivity : AppCompatActivity() {
         val emailIntent = Intent(Intent.ACTION_SEND)
         // set the type to 'email'
         emailIntent.type = "vnd.android.cursor.dir/email"
-        val to = arrayOf("leo.partanen@kolumbus.fi") //get email from spe !!!
+
+        val to = arrayOf("leo.partanen@kolumbus.fi") //get email from spe !!! //OPTIONAL
 
         if (to.isNotEmpty()) {
-            emailIntent.putExtra(Intent.EXTRA_EMAIL, to)
-            // the attachment
+            //emailIntent.putExtra(Intent.EXTRA_EMAIL, to)
             emailIntent.putExtra(Intent.EXTRA_STREAM, path)
-            // the mail subject
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Subject")
-            startActivity(Intent.createChooser(emailIntent, "Send email..."))
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "")
+            (context as Activity).startActivity(Intent.createChooser(emailIntent, "Share file..."))
         }
         else {
 
@@ -618,8 +770,40 @@ class MainActivity : AppCompatActivity() {
 
     ////----------------NEW------EXCEL------COMMANDS---------------->>>>
 
-    private fun fillRowNEW(wb: Workbook, row: Row, weekday: String, date: Date, project: String, description: String, start: String, end: String, time: String) {
-        val cs = wb.createCellStyle()
+    private lateinit var cs: CellStyle
+    private lateinit var cellStyle: CellStyle
+    private lateinit var cellStyleTask: CellStyle
+
+    private fun CellStyle.setupCellStyle() {
+        alignment = ALIGN_CENTER
+        verticalAlignment = VERTICAL_CENTER
+        wrapText = true
+    }
+
+    private fun CellStyle.setupCellStyle(wb: Workbook) {
+        val createHelper = wb.creationHelper
+        dataFormat = createHelper.createDataFormat().getFormat("m/d/yy")
+        alignment = ALIGN_CENTER
+        verticalAlignment = VERTICAL_CENTER
+        wrapText = true
+    }
+
+    private fun CellStyle.setupCellStyleTask(wb: Workbook) {
+        fillForegroundColor = HSSFColor.GREEN.index
+        fillPattern = HSSFCellStyle.SOLID_FOREGROUND
+        alignment = ALIGN_CENTER
+        verticalAlignment = VERTICAL_CENTER
+        val font = wb.createFont()
+        font.color = HSSFColor.WHITE.index
+        font.boldweight = HSSFFont.BOLDWEIGHT_BOLD
+        setFont(font)
+        wrapText = true
+    }
+
+
+
+    private fun fillRowNEW(wb: Workbook, row: Row, weekday: String, date: Date, project: String, description: String, start: String, end: String, currentM: String) {
+        //val cs = wb.createCellStyle() //-------------------------------------------------------------------!!!
         cs.alignment = ALIGN_CENTER
         cs.verticalAlignment = VERTICAL_CENTER
         cs.wrapText = true
@@ -631,7 +815,7 @@ class MainActivity : AppCompatActivity() {
 
         //-----------------------------------------------------
 
-        val cellStyle = wb.createCellStyle()
+        //val cellStyle = wb.createCellStyle() //-------------------------------------------------------------------!!!
         val createHelper = wb.creationHelper
         cellStyle.dataFormat = createHelper.createDataFormat().getFormat("m/d/yy")
         cellStyle.alignment = ALIGN_CENTER
@@ -668,15 +852,15 @@ class MainActivity : AppCompatActivity() {
         cell.cellFormula = formula
         cell.cellStyle = cs
 
-        fillOtherCells(wb, row, project)
+        fillOtherCells(wb, row, project, currentM)
 
 
 
     }
 
-    fun fillOtherCells(wb: Workbook, row: Row, project: String) {
+    fun fillOtherCells(wb: Workbook, row: Row, project: String, currentM: String) {
         val createHelper = wb.creationHelper
-        val cs = wb.createCellStyle()
+        //val cs = wb.createCellStyle() //-------------------------------------------------------------------!!!
         cs.alignment = ALIGN_CENTER
         cs.verticalAlignment = VERTICAL_CENTER
         cs.wrapText = true
@@ -690,7 +874,7 @@ class MainActivity : AppCompatActivity() {
         cell.cellStyle = cs
 
 
-        var column = spe.getStatus(LAST_COLUMN, 7)
+        var column = spe.getStatus(LAST_COLUMN+currentM, 7)
 
         if (column == 7) {
             cell = wb.getSheetAt(0).getRow(9).createCell(7)
@@ -714,11 +898,11 @@ class MainActivity : AppCompatActivity() {
             cell.cellFormula = "SUMIF(${s}C${row.rowNum+1},$x$10,${s}G${row.rowNum+1})"
             cell.cellStyle = cs
 
-            spe.setStatus(LAST_COLUMN, column+1)
+            spe.setStatus(LAST_COLUMN+currentM, column+1)
         }
         else {
             var isNewWorkNumber = true
-            for (i in 0..spe.getStatus(LAST_COLUMN, 7)-6) {
+            for (i in 0..spe.getStatus(LAST_COLUMN+currentM, 7)-6) {
                 cell = wb.getSheetAt(0).getRow(9).getCell(7+i)
                 if (cell == null) {
                     break
@@ -745,7 +929,7 @@ class MainActivity : AppCompatActivity() {
                 //write here to the excel file
 
 
-                column = spe.getStatus(LAST_COLUMN, 7)
+                column = spe.getStatus(LAST_COLUMN+currentM, 7)
 
                 cell = wb.getSheetAt(0).getRow(9).createCell(column)
                 cell.setCellValue(project)
@@ -766,22 +950,19 @@ class MainActivity : AppCompatActivity() {
                 cell.cellFormula = "SUM(${x}11:INDEX($x:$x,MATCH(9.99E+307,$x:$x),1))"
                 cell.cellStyle = csf
 
-                spe.setStatus(LAST_COLUMN, column+1)
+                spe.setStatus(LAST_COLUMN+currentM, column+1)
 
             }
 
-            for (i in 0..spe.getStatus(LAST_COLUMN, 7)-8) {
+            for (i in 0..spe.getStatus(LAST_COLUMN+currentM, 7)-8) {
                 cell = wb.getSheetAt(0).getRow(8).createCell(7 + i)
                 if (cell != null) {
 
-                    Log.d("tää", "${cell.rowIndex}, ${cell.columnIndex}")
 
                     val x = CellReference.convertNumToColString(cell.columnIndex)
 
                     cell.cellFormula = "SUM(${x}11:$x${row.rowNum+1})"
                     cell.cellStyle = cs
-                } else {
-                    Log.d("tää", "null")
                 }
             }
         }
@@ -789,22 +970,33 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun writeIntoExcelFile(c: Context, weekday: String, date: Date, project: String, description: String, start: String, end: String, time: String): Boolean {
-        val triple = initializeExcelFileNEW(c)
+    fun writeIntoExcelFile(c: Context, date: Date, project: String, description: String, start: String, end: String): Boolean {
+        val triple = initializeExcelFile(c, dp.getMonthAndYearFromDate(date))
         wb = triple.first
         sheet = triple.second
-        val filename = triple.third
-        val row = sheet.createRow(spe.getStatus(LAST_ROW, 0))
-        spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
-        fillRowNEW(wb, row, weekday, date, project, description, start, end, time)
+        val currentM = triple.third
+
+        cs = wb.createCellStyle()
+        cellStyle = wb.createCellStyle()
+        cs.setupCellStyle()
+        cellStyle.setupCellStyle(wb)
+
+
+        val row = sheet.createRow(spe.getStatus(LAST_ROW+currentM, 0))
+        spe.setStatus(LAST_ROW+currentM, spe.getStatus(LAST_ROW+currentM, 0)+1)
+        val weekday = swf.format(date)
+        fillRowNEW(wb, row, weekday, date, project, description, start, end, currentM)
 
 
 
         //sortSheet(wb, sheet)
-        return saveExcelFile(c, filename)
+
+        val filename = "$currentM.xls"
+        return saveExcelFile(c, wb, filename)
     }
 
-    fun initializeExcelFileNEW(context: Context): Triple<HSSFWorkbook, Sheet, String> {
+    /*
+    private fun initializeExcelFileNEW(context: Context): Triple<HSSFWorkbook, Sheet, String> {
         spe.setupSharedPreferencesEditor(context)
         val currentM = dp.getCurrentMonthAndYear()
         when {
@@ -813,41 +1005,67 @@ class MainActivity : AppCompatActivity() {
                 sheet = wb.createSheet(currentM)
 
                 spe.setStatus(CURRENT_MONTH_AND_YEAR, currentM)
-                spe.setStatus(LAST_ROW, 9)
+                spe.setStatus(LAST_ROW+currentM, 9)
 
-                row = sheet.createRow(spe.getStatus(LAST_ROW, 9))
+                row = sheet.createRow(spe.getStatus(LAST_ROW+currentM, 9))
 
-                spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 9)+1)
+                spe.setStatus(LAST_ROW+currentM, spe.getStatus(LAST_ROW+currentM, 9)+1)
 
                 createTaskRow(wb, sheet, row)
 
-                val cs = wb.createCellStyle()
-                cs.alignment = ALIGN_CENTER
-                cs.verticalAlignment = VERTICAL_CENTER
-                cs.wrapText = true
-
                 val filename = "$currentM.xls"
                 saveExcelFile(context,filename)
-                return Triple(wb, sheet, filename)
+                return Triple(wb, sheet, currentM)
             }
             else -> {
-                val filename = "$currentM.xls"
-                return readExcelFileNEW(context, filename)
+                return readExcelFileNEW(context, currentM)
             }
         }
     }
+    */
 
-    fun readExcelFileNEW(context: Context, filename: String): Triple<HSSFWorkbook, Sheet, String> {
+    private fun readExcelFile(context: Context, currentM: String): Triple<HSSFWorkbook, Sheet, String> {
+        val filename = "$currentM.xls"
         try {
             val file = File(context.getExternalFilesDir(null), filename)
             val myInput = FileInputStream(file)
             val myFileSystem = POIFSFileSystem(myInput)
             wb = HSSFWorkbook(myFileSystem)
             sheet = wb.getSheetAt(0)
-            return Triple(wb, sheet, filename)
+            return Triple(wb, sheet, currentM)
         } catch (e: Exception) {
             e.printStackTrace()
-            return Triple(wb, sheet, filename)
+            return Triple(wb, sheet, currentM)
+        }
+    }
+
+    private fun initializeExcelFile(context: Context, currentM: String): Triple<HSSFWorkbook, Sheet, String> {
+        spe.setupSharedPreferencesEditor(context)
+
+        when {
+            currentM != spe.getStatus(MONTH_AND_YEAR+currentM, "") -> {
+                wb = HSSFWorkbook()
+                sheet = wb.createSheet(currentM)
+
+                spe.setStatus(MONTH_AND_YEAR+currentM, currentM)
+                spe.setStatus(LAST_ROW+currentM, 9)
+
+                row = sheet.createRow(spe.getStatus(LAST_ROW+currentM, 9))
+
+                spe.setStatus(LAST_ROW+currentM, spe.getStatus(LAST_ROW+currentM, 9)+1)
+
+                createTaskRow(wb, sheet, row)
+
+                val filename = "$currentM.xls"
+                saveExcelFile(context, wb, filename)
+                val workbookList = spe.getWorkbookList()
+                workbookList.add(currentM)
+                spe.setWorkbookList(workbookList)
+                return Triple(wb, sheet, currentM)
+            }
+            else -> {
+                return readExcelFile(context, currentM)
+            }
         }
     }
 
@@ -956,4 +1174,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
     */
+
+
+    fun writeStreakIntoExcelFile(c: Context, startDate: Date, endDate: Date, project: String, description: String, start: String, end: String): Boolean {
+        val triple = initializeExcelFile(c, dp.getMonthAndYearFromDate(startDate))
+        wb = triple.first
+        sheet = triple.second
+        var currentM = triple.third
+
+        cs = wb.createCellStyle()
+        cellStyle = wb.createCellStyle()
+        cs.setupCellStyle()
+        cellStyle.setupCellStyle(wb)
+
+
+        var date = startDate
+        while (date.before(endDate) || date == endDate) {
+
+            val cal = Calendar.getInstance()
+            cal.time = date
+
+            if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY && cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
+
+                if (currentM != dp.getMonthAndYearFromDate(date)) {
+                    val filename = "$currentM.xls"
+                    saveExcelFile(c, wb, filename)
+                    val tripleNew = initializeExcelFile(c, dp.getMonthAndYearFromDate(date))
+                    wb = tripleNew.first
+                    sheet = tripleNew.second
+                    currentM = tripleNew.third
+                    cs = wb.createCellStyle()
+                    cellStyle = wb.createCellStyle()
+                    cs.setupCellStyle()
+                    cellStyle.setupCellStyle(wb)
+                }
+                val row = sheet.createRow(spe.getStatus(LAST_ROW+currentM, 0))
+                spe.setStatus(LAST_ROW+currentM, spe.getStatus(LAST_ROW+currentM, 0)+1)
+                val weekday = swf.format(date)
+
+                fillRowNEW(wb, row, weekday, date, project, description, start, end, currentM)
+            }
+
+            cal.add(Calendar.DATE, 1)
+            date = cal.time
+        }
+
+
+
+        //sortSheet(wb, sheet)
+        val filename = "$currentM.xls"
+        return saveExcelFile(c, wb, filename)
+    }
+
+
+
+
+
 }

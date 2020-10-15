@@ -48,6 +48,10 @@ class DateProvider {
         return smf.format(System.currentTimeMillis())
     }
 
+    fun getMonthAndYearFromDate(date: Date): String {
+        return smf.format(date)
+    }
+
     fun getCurrentWeekNumber(): Int {
         return Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)
     }

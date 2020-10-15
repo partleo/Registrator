@@ -15,7 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_WORK_NUMBER
-import kotlinx.android.synthetic.main.fragment_register_duty.*
+import kotlinx.android.synthetic.main.fragment_register_streak.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -25,24 +25,18 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.view.Gravity
 import android.R.attr.gravity
-import android.content.res.Resources
-import android.text.AlteredCharSequence
+import android.app.Activity
+import android.os.Handler
 import android.text.InputFilter
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.DialogFragment
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 
 
-class RegisterDutyFragment: androidx.fragment.app.Fragment() {
+class RegisterStreakFragment: androidx.fragment.app.Fragment() {
 
     private lateinit var v: View
     private lateinit var c: Context
-    private var message = ""
-
-    private var viewGroup: ViewGroup? = null
 
     private val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     private val stf = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -52,15 +46,16 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
     private val smyf = SimpleDateFormat("yyyy", Locale.getDefault())
     private val smmf = SimpleDateFormat("MMMM", Locale.getDefault())
 
+    private lateinit var startDate: Date
+    private lateinit var endDate: Date
+
     private val m = MainActivity()
     private var spe = SharedPreferencesEditor()
-
-    private lateinit var date: Date
 
     private lateinit var dialog: AlertDialog
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        v = inflater.inflate(R.layout.fragment_register_duty, container, false)
+        v = inflater.inflate(R.layout.fragment_register_streak, container, false)
         c = v.context
         spe.setupSharedPreferencesEditor(c)
         return v
@@ -69,6 +64,7 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
         val p = setupWorkNumberList()
         val l = p.first
         val currentIndex = p.second
@@ -76,16 +72,21 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
             work_number_input.text = l[currentIndex]
         }
 
-        date = Date(System.currentTimeMillis())
+        startDate = Date(System.currentTimeMillis())
+        endDate = Date(System.currentTimeMillis())
 
-        date_text_view.text = smdf.format(System.currentTimeMillis())
-        month_text_view.text = smmf.format(System.currentTimeMillis())
-        year_text_view.text = smyf.format(System.currentTimeMillis())
-        time_from_text_view.text = stf.format(System.currentTimeMillis())
-        time_to_text_view.text = stf.format(System.currentTimeMillis())
+        date_from_text_view.text = smdf.format(System.currentTimeMillis())
+        month_from_text_view.text = smmf.format(System.currentTimeMillis())
+        year_from_text_view.text = smyf.format(System.currentTimeMillis())
+
+        date_to_text_view.text = smdf.format(System.currentTimeMillis())
+        month_to_text_view.text = smmf.format(System.currentTimeMillis())
+        year_to_text_view.text = smyf.format(System.currentTimeMillis())
 
         date_picker_linear_layout.setOnClickListener {
-            val builder = MaterialDatePicker.Builder.datePicker()
+            val builder = MaterialDatePicker.Builder.dateRangePicker()
+
+
             val constraints = CalendarConstraints.Builder()
             val calendar = Calendar.getInstance()
             calendar.add(Calendar.MONTH, -2)
@@ -94,44 +95,42 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
             val nextMonth = calendar.timeInMillis
             constraints.setStart(previousMonth).setEnd(nextMonth)
             builder.setCalendarConstraints(constraints.build())
+
+
             val picker = builder.build()
+
             picker.addOnPositiveButtonClickListener {
-                date = sdf.parse(sdf.format(Date(it)))
-                date_text_view.text = smdf.format(it)
-                month_text_view.text = smmf.format(it)
-                year_text_view.text = smyf.format(it)
+                startDate = sdf.parse(sdf.format(Date(it.first!!)))
+                endDate = sdf.parse(sdf.format(Date(it.second!!)))
+                date_from_text_view.text = smdf.format(it.first)
+                month_from_text_view.text = smmf.format(it.first)
+                year_from_text_view.text = smyf.format(it.first)
+                date_to_text_view.text = smdf.format(it.second)
+                month_to_text_view.text = smmf.format(it.second)
+                year_to_text_view.text = smyf.format(it.second)
             }
             picker.show(fragmentManager!!, picker.toString())
-        }
-        time_from_picker_linear_layout.setOnClickListener {
-            showTimePicker(time_from_text_view)
-        }
-        time_to_picker_linear_layout.setOnClickListener {
-            showTimePicker(time_to_text_view)
         }
         work_number_input.setOnClickListener {
             showAlertDialog()
         }
         register_duty_button.setOnClickListener {
+
             val project = work_number_input.text.toString()
             val description = edit_text_description.text.toString()
-            val startTime = time_from_text_view.text.toString()
-            val endTime = time_to_text_view.text.toString()
+            val startTime = "8:00"//time_from_text_view.text.toString()
+            val endTime = "16:00"//time_to_text_view.text.toString()
 
             if (validateForm(project, description)) {
                 val list = spe.getWorkNumberList()
                 list.add(project)
                 spe.setWorkNumberList(list)
-                m.writeIntoExcelFile(c, date, project, description, startTime, endTime)
-            }
-        }
-    }
 
-    private fun Int.intToString(): String {
-        return if (this < 10) {
-            "0${this}"
-        } else {
-            "${this}"
+
+                if (m.writeStreakIntoExcelFile(c, startDate, endDate, project, description, startTime, endTime)) {
+                    Log.d("tää", "ok")
+                }
+            }
         }
     }
 
@@ -151,16 +150,8 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
 
     private fun setupWorkNumberList(): Pair<ArrayList<String>, Int> {
         val list = spe.getWorkNumberList()
-        /*
-        list.clear()
-        spe.setWorkNumberList(list)
-        spe.setStatus(CURRENT_WORK_NUMBER, 0)
-        */
-
         list.add(getString(R.string.new_work_number))
-
         val currentIndex = spe.getStatus(CURRENT_WORK_NUMBER, 0)
-        //work_number_input.text = list[currentIndex]
         return Pair(list, currentIndex)
     }
 
@@ -170,18 +161,6 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
         spe.setWorkNumberList(list)
         spe.setStatus(CURRENT_WORK_NUMBER, spe.getWorkNumberList().indexOf(workNumber))
 
-    }
-
-    private fun showTimePicker(textView: TextView) {
-        val builder = MaterialTimePicker.Builder()
-        val picker = builder.setTimeFormat(TimeFormat.CLOCK_24H).build()
-        //picker.setStyle(DialogFragment.STYLE_NORMAL, R.style.Custom_TimePickerDialogStyle) //NOT WORKING!!!!!
-        picker.addOnPositiveButtonClickListener {
-            val hour = picker.hour.intToString()
-            val minute = picker.minute.intToString()
-            textView.text = c.getString(R.string.time_display_format, hour, minute)//"${picker.hour.intToString()}:${picker.hour.intToString()}"
-        }
-        picker.show(fragmentManager!!, picker.toString())
     }
 
     private fun showAlertDialog() {
@@ -281,7 +260,5 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
             dialog.listView.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, 1152)
         }
     }
-
-
 
 }
