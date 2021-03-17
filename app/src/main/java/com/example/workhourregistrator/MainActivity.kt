@@ -1,6 +1,6 @@
 package com.example.workhourregistrator
 
-import android.app.Activity
+import android.app.*
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -12,23 +12,21 @@ import java.io.IOException
 import org.apache.poi.poifs.filesystem.POIFSFileSystem
 import java.io.FileInputStream
 import android.content.Intent
-import android.net.Uri
-import android.os.Handler
-import android.view.LayoutInflater
 import com.google.android.material.snackbar.Snackbar
 import androidx.fragment.app.Fragment
 import androidx.core.content.FileProvider
 import androidx.core.view.GravityCompat
 import androidx.appcompat.app.ActionBarDrawerToggle
 import android.view.ViewGroup
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_WEEK
-import com.example.workhourregistrator.SharedPreferencesEditor.Companion.EMAIL_ADDRESS
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.DESCRIPTION
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.END_WORKING_DAY
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_COLUMN
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_ROW
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.MONTH_AND_YEAR
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.START_TIME_WORK
+import com.example.workhourregistrator.SharedPreferencesEditor.Companion.WORK_IN_PROGRESS
+import com.example.workhourregistrator.notifications.AlarmReceiver
+import com.example.workhourregistrator.notifications.NotificationUtils.Companion.OPEN_START_DUTY
 /*
 import com.microsoft.onedrivesdk.picker.IPicker
 import com.microsoft.onedrivesdk.picker.IPickerResult
@@ -49,21 +47,17 @@ import com.onedrive.sdk.extensions.OneDriveClient
 */
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.android.synthetic.main.fragment_start_duty.*
 import org.apache.poi.hssf.usermodel.*
-import org.apache.poi.hssf.util.CellRangeAddress
-import org.apache.poi.ss.format.CellFormatType
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.usermodel.CellStyle.ALIGN_CENTER
 import org.apache.poi.ss.usermodel.CellStyle.VERTICAL_CENTER
 import org.apache.poi.ss.usermodel.Sheet
-import org.apache.poi.ss.usermodel.CreationHelper
 import org.apache.poi.ss.usermodel.CellStyle
 import java.util.*
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.util.CellReference
 import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -80,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     private val dp = DateProvider()
     private var spe = SharedPreferencesEditor()
 
-    //private var listOfRows = arrayListOf<Row>()
+    private var listOfTasks = arrayListOf<String>()
     private var wb = HSSFWorkbook()
     private lateinit var sheet: Sheet
 
@@ -100,11 +94,70 @@ class MainActivity : AppCompatActivity() {
 
     //-------------------------------------------------------------------------------------------------------------
 
+
+
+    fun setAlarm(context: Context, timeInMillis: Long, cancel: Boolean) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmReceiver::class.java)
+        intent.putExtra("alarm", 0)
+        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0)
+
+        if (cancel) {
+            alarmManager.cancel(pendingIntent)
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
+        }
+        setAutomaticFinish(context, timeInMillis, cancel)
+    }
+
+    fun setAutomaticFinish(context: Context, timeInMillis: Long, cancel: Boolean) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmReceiver::class.java)
+        intent.putExtra("alarm", 1)
+        val pendingIntent = PendingIntent.getBroadcast(context, 1, intent, 0)
+        if (cancel) {
+            alarmManager.cancel(pendingIntent)
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, timeInMillis+TimeUnit.MINUTES.toMillis(15), pendingIntent)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //spe.setupSharedPreferencesEditor(this)
-        setupFragment(HomeFragment(), "tag")
+        setupToolbar()
+
+        if (intent.extras?.getBoolean(OPEN_START_DUTY, false) == true) {
+            setupFragment(StartDutyFragment(), "tag")
+        } else {
+            setupFragment(HomeFragment(), "tag")
+        }
+
+        spe.setupSharedPreferencesEditor(this)
+        if (spe.getStatus(END_WORKING_DAY, false)) {
+            val cal = Calendar.getInstance()
+
+            val adp = AlertDialogProvider()
+
+            val date = cal.time
+            val startTime = spe.getStatus(START_TIME_WORK, "")
+            val endTime = "16:00"
+
+            val pair = adp.setupWorkNumberList(this)
+            val list = pair.first
+            val currentIndex = pair.second
+            val project = list[currentIndex]
+            val description = spe.getStatus(DESCRIPTION, "")
+
+            list.add(project)
+            spe.setWorkNumberList(list)
+            spe.setStatus(START_TIME_WORK, endTime)
+            writeIntoExcelFile(this, date, project, description, startTime, endTime)
+            spe.setStatus(WORK_IN_PROGRESS, false)
+            spe.setStatus(END_WORKING_DAY, false)
+        }
+
+
 
         //-------------------------------------------------------------------------------------------------------------
 
@@ -359,7 +412,19 @@ class MainActivity : AppCompatActivity() {
 
     //-------------------------------------------
 
-    private fun setupFragment(fragment: androidx.fragment.app.Fragment, tag: String) {
+    private fun inflateLists(context: Context) {
+        listOfTasks = arrayListOf(
+            context.getString(R.string.weekday),
+            context.getString(R.string.date),
+            context.getString(R.string.project),
+            context.getString(R.string.description),
+            context.getString(R.string.from),
+            context.getString(R.string.to),
+            context.getString(R.string.h_min)
+            )
+    }
+
+    private fun setupFragment(fragment: Fragment, tag: String) {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment, tag).commit()
     }
 
@@ -373,84 +438,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    //-------------------------------------------
-
-    /*main fragement
-    private fun workInProgress(inProgress: Boolean) {
-        if (inProgress) {
-            start_work.isEnabled = false
-            action_buttons.visibility = View.VISIBLE
-            action_button_layout.visibility = View.GONE
-        }
-        else {
-            start_work.isEnabled = true
-            action_buttons.visibility = View.GONE
-            action_button_layout.visibility = View.VISIBLE
-        }
-    }
-    main fragment*/
-
-    /*
-    private fun initializeExcelFile() {
-        val currentM = dp.getCurrentMonthAndYear()
-        val currentW = dp.getCurrentWeekNumber()
-        when {
-            currentM != spe.getStatus(CURRENT_MONTH_AND_YEAR, "") -> {
-                wb = HSSFWorkbook()
-                sheet = wb.createSheet(currentM)
-
-                spe.setStatus(CURRENT_MONTH_AND_YEAR, currentM)
-                spe.setStatus(CURRENT_WEEK, currentW)
-
-                spe.setStatus(LAST_ROW, 9)
-                spe.setStatus(LAST_COLUMN, 7)
-
-                row = if (sheet.getRow(spe.getStatus(LAST_ROW, 9)) == null) {
-                    sheet.createRow(spe.getStatus(LAST_ROW, 9))
-                } else {
-                    sheet.getRow(spe.getStatus(LAST_ROW, 9))
-                }
-
-                //listOfRows.add(row)
-                spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 9)+1)
-                createTaskRow(wb, sheet, row)
-
-                saveExcelFile(this,"$currentM.xls")
-
-            }
-            /*currentW != spe.getStatus(CURRENT_WEEK, 0) -> {
-                Log.d("tää", "toka")
-                readExcelFile(this, "$currentM.xls")
-                spe.setStatus(CURRENT_WEEK, currentW)
-                spe.setStatus(LAST_ROW, 0)
-                spe.setStatus(LAST_COLUMN, spe.getStatus(LAST_COLUMN, 0)+7)
-                val row = if (sheet.getRow(spe.getStatus(LAST_ROW, 0)) == null) {
-                    Toast.makeText(this, "eka", Toast.LENGTH_SHORT).show()
-                    sheet.createRow(spe.getStatus(LAST_ROW, 0))
-                } else {
-                    Toast.makeText(this, "toka", Toast.LENGTH_SHORT).show()
-                    sheet.getRow(spe.getStatus(LAST_ROW, 0))
-                }
-                createTaskRow(wb, sheet, row)
-
-                /*
-                val row = sheet.createRow(spe.getStatus(LAST_ROW, 0))
-                //listOfRows.add(row)
-                spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
-
-
-                createTaskRow(wb, sheet, row)
-
-                saveExcelFile(this,"test.xls")
-                */
-            }*/
-            else -> {
-                readExcelFile(this, "$currentM.xls")
-            }
-        }
-    }
-    */
-
     private fun saveExcelFile(context: Context, workbook: Workbook, fileName: String): Boolean {
         var success = false
 
@@ -462,17 +449,25 @@ class MainActivity : AppCompatActivity() {
             workbook.write(os)
             Log.d("FileUtils", "Writing file$file")
             //Toast.makeText(context, getText(R.string.excel_file_saved_successfully), Toast.LENGTH_SHORT).show()
-            Snackbar.make((context as Activity).window.decorView, getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            val toi = context as Activity?
+            if(context is MainActivity) {
+                Snackbar.make((context as Activity).window.decorView, getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            }
+
 
         } catch (e: IOException) {
             Log.d("FileUtils", "Error writing $file", e)
             //Toast.makeText(context, context.getText(R.string.excel_file_writing_error), Toast.LENGTH_SHORT).show()
-            Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            if(context is MainActivity) {
+                Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            }
             //Snackbar.make(window.decorView, getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
         } catch (e: Exception) {
             Log.d("FileUtils", "Failed to save file", e)
             //Toast.makeText(context, context.getText(R.string.excel_file_writing_error), Toast.LENGTH_SHORT).show()
-            Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            if(context is MainActivity) {
+                Snackbar.make((context as Activity).window.decorView, context.getText(R.string.excel_file_saved), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
+            }
             //Snackbar.make(window.decorView, getText(R.string.excel_file_saved_successfully), Snackbar.LENGTH_LONG).setAction(ACTION, null).show()
 
         } finally {
@@ -528,154 +523,54 @@ class MainActivity : AppCompatActivity() {
     }
     */
 
+
     private fun createTaskRow(wb: Workbook, sheet: Sheet, row: Row) {
-        //Cell style for header row
-        /*
-        val cs = wb.createCellStyle() //-------------------------------------------------------------------!!!
-        cs.fillForegroundColor = HSSFColor.GREEN.index
-        cs.fillPattern = HSSFCellStyle.SOLID_FOREGROUND
-        cs.alignment = ALIGN_CENTER
-        cs.verticalAlignment = VERTICAL_CENTER
-        val font = wb.createFont()
-        font.color = HSSFColor.WHITE.index
-        font.boldweight = HSSFFont.BOLDWEIGHT_BOLD
-        cs.setFont(font)
-        cs.wrapText = true
-        */
         cellStyleTask = wb.createCellStyle()
         cellStyleTask.setupCellStyleTask(wb)
 
-        /*
-        sheet.addMergedRegion(CellRangeAddress(0,0,0,1))
-        var c = row.createCell(0)
-        c.setCellValue("PVM")
-        c.cellStyle = cs
-        */
+        sheet.setColumnWidth(0, 15 * 200)
+        sheet.setColumnWidth(1, 15 * 200)
+        sheet.setColumnWidth(3, 15 * 500)
 
-        //val column = spe.getStatus(LAST_COLUMN, 0)
+        listOfTasks.forEach {
+            val c = row.createCell(listOfTasks.indexOf(it))
+            c.setCellValue(it)
+            c.cellStyle = cellStyleTask
+        }
+    }
 
+    /*
         sheet.setColumnWidth(0, 15 * 200)
         var c = row.createCell( 0)
-        c.setCellValue("viikonpäivä")
+        c.setCellValue(context.getString(R.string.weekday))
         c.cellStyle = cellStyleTask
 
         sheet.setColumnWidth(1, 15 * 200)
         c = row.createCell(1)
-        c.setCellValue("päivämäärä")
+        c.setCellValue(context.getString(R.string.date))
         c.cellStyle = cellStyleTask
 
         c = row.createCell(2)
-        c.setCellValue("projekti")
+        c.setCellValue(context.getString(R.string.project))
         c.cellStyle = cellStyleTask
 
         sheet.setColumnWidth(3, 15 * 500)
         c = row.createCell( 3)
-        c.setCellValue("kuvaus")
+        c.setCellValue(context.getString(R.string.description))
         c.cellStyle = cellStyleTask
 
         c = row.createCell(4)
-        c.setCellValue("alkaen")
+        c.setCellValue(context.getString(R.string.from))
         c.cellStyle = cellStyleTask
 
         c = row.createCell( 5)
-        c.setCellValue("päättyen")
+        c.setCellValue(context.getString(R.string.to))
         c.cellStyle = cellStyleTask
 
         c = row.createCell(6)
-        c.setCellValue("h/min")
+        c.setCellValue(context.getString(R.string.h_min))
         c.cellStyle = cellStyleTask
-    }
-
-    /*
-    private fun fillRow(wb: Workbook, sheet: Sheet, project: String, description: String, start: String, end: String, time: String) {
-        val cs = wb.createCellStyle()
-        cs.alignment = ALIGN_CENTER
-        cs.verticalAlignment = VERTICAL_CENTER
-        cs.wrapText = true
-
-        val row = if (sheet.getRow(spe.getStatus(LAST_ROW, 0)) == null) {
-            sheet.createRow(spe.getStatus(LAST_ROW, 0))
-        } else {
-            sheet.getRow(spe.getStatus(LAST_ROW, 0))
-        }
-        //listOfRows.add(row)
-        spe.setStatus(LAST_ROW, spe.getStatus(LAST_ROW, 0)+1)
-
-        val column = spe.getStatus(LAST_COLUMN, 0)
-
-        var c = row.createCell(column + 2)
-        c.setCellValue(project)
-        c.cellStyle = cs
-
-        c = row.createCell(column + 3)
-        c.setCellValue(description)
-        c.cellStyle = cs
-
-        c = row.createCell(column + 4)
-        c.setCellValue(start)
-        c.cellStyle = cs
-
-        c = row.createCell(column + 5)
-        c.setCellValue(end)
-        c.cellStyle = cs
-
-        c = row.createCell(column + 6)
-        c.setCellValue(time)
-        c.cellStyle = cs
-    }
-    */
-
-    /*
-    private fun readExcelFile(context: Context, filename: String) {
-        try {
-            val file = File(context.getExternalFilesDir(null), filename)
-            val myInput = FileInputStream(file)
-            val myFileSystem = POIFSFileSystem(myInput)
-            wb = HSSFWorkbook(myFileSystem)
-            sheet = wb.getSheetAt(0)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-    */
-
-    /*
-    private fun readExcelFile(context: Context, filename: String) {
-
-        try {
-            // Creating Input Stream
-            //val file = File(context.getExternalFilesDir(null), filename)
-            val file = File(context.getExternalFilesDir(null), filename)
-            val myInput = FileInputStream(file)
-
-            // Create a POIFSFileSystem object
-            val myFileSystem = POIFSFileSystem(myInput)
-
-            // Create a workbook using the File System
-            val myWorkBook = HSSFWorkbook(myFileSystem)
-
-            // Get the first sheet from workbook
-            val mySheet = myWorkBook.getSheetAt(0)
-
-            /** We now need something to iterate through the cells. */
-            val rowIter = mySheet.rowIterator()
-
-            while (rowIter.hasNext()) {
-                val myRow = rowIter.next() as HSSFRow
-                val cellIter = myRow.cellIterator()
-                while (cellIter.hasNext()) {
-                    val myCell = cellIter.next() as HSSFCell
-                    Log.d("FragmentActivity.TAG", "Cell Value: $myCell")
-                    Toast.makeText(context, "cell Value: $myCell", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        return
-    }
-    */
+        */
 
     fun sendEmail(context: Context, fileName: String) {
         val file = File(context.getExternalFilesDir(null), fileName)
@@ -695,7 +590,7 @@ class MainActivity : AppCompatActivity() {
             //emailIntent.putExtra(Intent.EXTRA_EMAIL, to)
             emailIntent.putExtra(Intent.EXTRA_STREAM, path)
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, "")
-            (context as Activity).startActivity(Intent.createChooser(emailIntent, "Share file..."))
+            (context as Activity).startActivity(Intent.createChooser(emailIntent, context.getText(R.string.share_file)))
         }
         else {
 
@@ -1054,6 +949,7 @@ class MainActivity : AppCompatActivity() {
 
                 spe.setStatus(LAST_ROW+currentM, spe.getStatus(LAST_ROW+currentM, 9)+1)
 
+                inflateLists(context)
                 createTaskRow(wb, sheet, row)
 
                 val filename = "$currentM.xls"
@@ -1228,6 +1124,12 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
+    private fun setupToolbar() {
+        toolbar.inflateMenu(R.menu.exit)
+        toolbar.setOnMenuItemClickListener {
+            finish()
+            true
+        }
+    }
 
 }

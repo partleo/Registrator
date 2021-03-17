@@ -14,21 +14,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import com.example.workhourregistrator.SharedPreferencesEditor.Companion.CURRENT_WORK_NUMBER
 import kotlinx.android.synthetic.main.fragment_register_streak.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
-import android.widget.LinearLayout
-import android.widget.EditText
-import android.view.WindowManager
-import android.widget.FrameLayout
-import android.view.Gravity
-import android.R.attr.gravity
-import android.app.Activity
-import android.os.Handler
-import android.text.InputFilter
-import androidx.core.content.ContextCompat
+import androidx.appcompat.widget.Toolbar
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.MaterialDatePicker
 
@@ -51,8 +40,8 @@ class RegisterStreakFragment: androidx.fragment.app.Fragment() {
 
     private val m = MainActivity()
     private var spe = SharedPreferencesEditor()
+    private val adp = AlertDialogProvider()
 
-    private lateinit var dialog: AlertDialog
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         v = inflater.inflate(R.layout.fragment_register_streak, container, false)
@@ -63,9 +52,10 @@ class RegisterStreakFragment: androidx.fragment.app.Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val toolbar = v.rootView.findViewById<Toolbar>(R.id.toolbar)
+        toolbar.setTitle(R.string.register_day_off)
 
-
-        val p = setupWorkNumberList()
+        val p = adp.setupWorkNumberList(c)
         val l = p.first
         val currentIndex = p.second
         if (l[currentIndex] != getString(R.string.new_work_number)) {
@@ -112,7 +102,7 @@ class RegisterStreakFragment: androidx.fragment.app.Fragment() {
             picker.show(fragmentManager!!, picker.toString())
         }
         work_number_input.setOnClickListener {
-            showAlertDialog()
+            adp.showAlertDialog(c, work_number_input)
         }
         register_duty_button.setOnClickListener {
 
@@ -147,6 +137,8 @@ class RegisterStreakFragment: androidx.fragment.app.Fragment() {
             else -> true
         }
     }
+
+    /*
 
     private fun setupWorkNumberList(): Pair<ArrayList<String>, Int> {
         val list = spe.getWorkNumberList()
@@ -260,5 +252,5 @@ class RegisterStreakFragment: androidx.fragment.app.Fragment() {
             dialog.listView.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, 1152)
         }
     }
-
+    */
 }

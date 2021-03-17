@@ -28,6 +28,7 @@ import android.R.attr.gravity
 import android.content.res.Resources
 import android.text.AlteredCharSequence
 import android.text.InputFilter
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.datepicker.CalendarConstraints
@@ -54,10 +55,10 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
 
     private val m = MainActivity()
     private var spe = SharedPreferencesEditor()
+    private val adp = AlertDialogProvider()
 
     private lateinit var date: Date
 
-    private lateinit var dialog: AlertDialog
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         v = inflater.inflate(R.layout.fragment_register_duty, container, false)
@@ -68,8 +69,11 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val toolbar = v.rootView.findViewById<Toolbar>(R.id.toolbar)
+        toolbar.setTitle(R.string.register_duty)
 
-        val p = setupWorkNumberList()
+
+        val p = adp.setupWorkNumberList(c)
         val l = p.first
         val currentIndex = p.second
         if (l[currentIndex] != getString(R.string.new_work_number)) {
@@ -110,7 +114,7 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
             showTimePicker(time_to_text_view)
         }
         work_number_input.setOnClickListener {
-            showAlertDialog()
+            adp.showAlertDialog(c, work_number_input)
         }
         register_duty_button.setOnClickListener {
             val project = work_number_input.text.toString()
@@ -149,6 +153,7 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
         }
     }
 
+    /*
     private fun setupWorkNumberList(): Pair<ArrayList<String>, Int> {
         val list = spe.getWorkNumberList()
         /*
@@ -172,6 +177,8 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
 
     }
 
+     */
+
     private fun showTimePicker(textView: TextView) {
         val builder = MaterialTimePicker.Builder()
         val picker = builder.setTimeFormat(TimeFormat.CLOCK_24H).build()
@@ -184,6 +191,7 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
         picker.show(fragmentManager!!, picker.toString())
     }
 
+    /*
     private fun showAlertDialog() {
         val builder = AlertDialog.Builder(c)
         builder.setTitle(getString(R.string.choose_work_number))
@@ -282,6 +290,8 @@ class RegisterDutyFragment: androidx.fragment.app.Fragment() {
         }
     }
 
+
+     */
 
 
 }

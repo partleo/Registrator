@@ -1,0 +1,63 @@
+<resources>
+    <string name="app_id">96141ee0–fb7f–4b27–89c2-ec53f3dd469d</string>
+    <string name="app_name">Registrator</string>
+    <string name="menu">Menu</string>
+
+    <string name="working_hour_tables">Työtuntitaulukot</string>
+    <string name="start_duty">Aloita työ</string>
+    <string name="register_duty">Rekisteröi työ</string>
+    <string name="register_day_off">Rekisteröi poissaolo</string>
+
+    <string name="options">Valinnat</string>
+    <string name="share">Jaa</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="choose_work_number">Valitse työnumero:</string>
+    <string name="new_work_number">Uusi työnumero</string>
+
+    <string name="ok">OK</string>
+    <string name="cancel">Peruuta</string>
+    <string name="delete">Poista</string>
+
+    <string name="work_number">työnumero</string>
+    <string name="description">kuvaus</string>
+    <string name="register">rekisteröi</string>
+    <string name="from">alkaen</string>
+    <string name="to">päättyen</string>
+    <string name="start">Aloita</string>
+    <string name="change">Vaihda</string>
+    <string name="quit">Lopeta</string>
+
+    <string name="weekday">viikonpäivä</string>
+    <string name="date">päivämäärä</string>
+    <string name="project">projekti</string>
+
+
+    <string name="excel_file_saved">Tallennettu Excel-tiedostoon</string>
+    <string name="excel_file_saved_successfully">Työ rekisteröity onnistuneesti</string>
+    <string name="excel_file_writing_error">Joku meni vikaan! Työtä EI rekisteröity oikein!</string>
+
+    <string name="choose_option">Valitse toiminto:</string>
+    <string name="open_file">Avaa tiedosto</string>
+    <string name="share_file">Lähetä tiedosto</string>
+    <string name="delete_file">Poista tiedosto</string>
+    <string name="are_you_sure">Oletko varma, että haluat poistaa tämän tiedoston?</string>
+
+    <string name="excel_file_deleted">Tiedosto poistettu onnistuneesti</string>
+    <string name="excel_file_delete_error">Joku meni vikaan! Tiedostoa ei poistettu!</string>
+
+    <string name="field_empty">Täytä kaikki kohdat!</string>
+
+    <string name="time_display_format">%1$s:%2$s</string>
+
+    <string name="dialog_current_work_started">Aloitettu työ klo %1$s</string>
+
+    <string name="finish_working_day">Haluatko päättää työpäivän?</string>
+    <string name="continue_working">Jatka</string>
+    <string name="quit_the_day">Ulos</string>
+
+    <string name="notification_title">Työpäiväsi on päättymässä!</string>
+    <string name="notification_description">Työpäivänne rekisteröidään päättymään klo 16.00. Haluatko jatkaa työpäivää klo 16.00 jälkeen?</string>
+</resources>

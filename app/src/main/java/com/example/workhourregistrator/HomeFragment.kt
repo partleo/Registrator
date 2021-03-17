@@ -31,6 +31,7 @@ import com.example.workhourregistrator.SharedPreferencesEditor.Companion.LAST_RO
 import com.example.workhourregistrator.SharedPreferencesEditor.Companion.MONTH_AND_YEAR
 import android.content.DialogInterface
 import android.widget.*
+import androidx.appcompat.widget.Toolbar
 
 
 class HomeFragment: Fragment(), CardClickListener {
@@ -54,6 +55,8 @@ class HomeFragment: Fragment(), CardClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val toolbar = v.rootView.findViewById<Toolbar>(R.id.toolbar)
+        toolbar.setTitle(R.string.working_hour_tables)
         inflateCardList(c)
         autoFitRecyclerView = v.findViewById(R.id.auto_fit_recycler_view)
         autoFitRecyclerView.adapter = RecyclerViewAdapter(cardList, this)
@@ -71,15 +74,6 @@ class HomeFragment: Fragment(), CardClickListener {
 
     override fun onCardClicked(holder: CardViewHolder, position: Int) {
         showAlertDialog(cardList[position].title, position)
-        /*
-        when (position) {
-            0 -> showAlertDialog(cardList[0].title)
-            1 -> Toast.makeText(c, "$position", Toast.LENGTH_SHORT).show()
-            2 -> Toast.makeText(c, "$position", Toast.LENGTH_SHORT).show()
-            3 -> Toast.makeText(c, "$position", Toast.LENGTH_SHORT).show()
-            else -> Log.d("CardView", "Exception: Too many positions!!")
-        }
-         */
     }
 
     private lateinit var dialog: AlertDialog
@@ -90,32 +84,13 @@ class HomeFragment: Fragment(), CardClickListener {
         builder.setTitle(getString(R.string.choose_option))
 
 
-        /*
-        val linearLayout: LinearLayout = v.findViewById(R.id.list_item_layout)
-
-        val imageView: ImageView = linearLayout.findViewById(R.id.list_item_imageView)
-        val textView: TextView = linearLayout.findViewById(R.id.list_item_textView)
-        textView.text = workbook
-        builder.setView(linearLayout)
-        */
-        /*
-        val container = FrameLayout(c)
-        val params = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            500
-        )
-        container.layoutParams = params
-        builder.setView(container)
-        */
-
-
 
 
         val filename = "$workbook.xls"
         val file = File(c.getExternalFilesDir(null), filename)
         val path = FileProvider.getUriForFile(c, "com.example.workhourregistrator.fileprovider", file);
 
-        builder.setItems(arrayOf<CharSequence>("Open file", "Share file", "Delete file")) { dialog, which ->
+        builder.setItems(arrayOf<CharSequence>(c.getText(R.string.open_file), c.getText(R.string.share_file), c.getText(R.string.delete_file))) { dialog, which ->
             when (which) {
                 0 -> {
                     try {
@@ -134,23 +109,6 @@ class HomeFragment: Fragment(), CardClickListener {
             }
         }
 
-        /*
-        builder.setPositiveButton(getString(R.string.open)) { _, _ ->
-            try {
-                val intent = Intent(Intent.ACTION_VIEW, path).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                //tel the user to install viewer to perform this action
-            }
-
-        }
-        builder.setNegativeButton(getString(R.string.share)) { _, _ ->
-            m.sendEmail(c, filename)
-        }
-        builder.setNeutralButton(getString(R.string.delete)) { _, _ ->
-            showAlertDialog(workbook, file, position)
-        }
-        */
         builder.setPositiveButton(getString(R.string.cancel), null)
 
         dialog = builder.create()

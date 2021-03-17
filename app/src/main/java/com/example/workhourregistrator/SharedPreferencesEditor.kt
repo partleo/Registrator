@@ -36,6 +36,11 @@ class SharedPreferencesEditor {
 
         const val WORKBOOK_LIST = "WorkbookList"
 
+        const val DESCRIPTION = "Description"
+
+
+        const val END_WORKING_DAY = "EndWorkingDay"
+
     }
 
     private lateinit var c: Context
